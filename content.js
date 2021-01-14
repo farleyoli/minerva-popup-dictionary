@@ -1,15 +1,19 @@
 // content.js
 
 function doubleClickEventHandler() {
-    let t = getSelectedParagraphText();
-    alert(t);
+    let t = getSelectedPosition();
+    let body = document.body;
+    let allText = body.textContent || body.innerText;
+    //alert(t);
+    alert(allText.slice(t, t+20));
 }
 
 
-function getSelectedParagraphText() {
-    // Reminder: to get position, add marker to part of HTML of interest
-
-    // This part seems to be working well.
+/**
+ * Get position of selected text inside inner text of body
+ * @return {Number}     position.
+ */
+function getSelectedPosition() {
     let selection = "";
     if (window.getSelection) {
         selection = window.getSelection();
@@ -21,15 +25,17 @@ function getSelectedParagraphText() {
         return "";
     }
 
+    let range = selection.getRangeAt(0);
+    let startOffset = range.startOffset;
+
     let node = selection.anchorNode;
-    parent = node.parentNode;
 
-    if (parent != null) {
-        // This is a decent first approximation.
-        return parent.innerText || parent.textContent;
-    }
+    let body = document.body;
+    let allText = body.textContent || body.innerText;
 
-    return selection;
+    pos = allText.indexOf(node.textContent) + startOffset;
+
+    return pos;
 }
 
-document.addEventListener("dblclick", doubleClickEventHandler);
+document.body.addEventListener("dblclick", doubleClickEventHandler);
