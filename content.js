@@ -1,17 +1,19 @@
 // content.js
 
 function doubleClickEventHandler() {
-    let t = getSelectedPosition();
+    let pos = getSelectedPosition();
+    let beg = pos[0];
+    let end = pos[1];
     let body = document.body;
     let allText = body.textContent || body.innerText;
     //alert(t);
-    alert(allText.slice(t, t+20));
+    alert(allText.slice(beg, end));
 }
 
 
 /**
  * Get position of selected text inside inner text of body
- * @return {Number}     position.
+ * @return {Number[]} beginning and ending position.
  */
 function getSelectedPosition() {
     let selection = "";
@@ -27,15 +29,17 @@ function getSelectedPosition() {
 
     let range = selection.getRangeAt(0);
     let startOffset = range.startOffset;
+    let endOffset = startOffset + range.toString().length;
 
     let node = selection.anchorNode;
 
     let body = document.body;
     let allText = body.textContent || body.innerText;
 
-    pos = allText.indexOf(node.textContent) + startOffset;
+    startOffset += allText.indexOf(node.textContent);
+    endOffset += allText.indexOf(node.textContent);
 
-    return pos;
+    return [startOffset, endOffset];
 }
 
 document.body.addEventListener("dblclick", doubleClickEventHandler);
