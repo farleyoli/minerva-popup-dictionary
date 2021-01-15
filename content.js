@@ -1,5 +1,39 @@
 // content.js
 
+function constructDfn(dict, word) {
+    // Use the word "acid" to test stuff.
+    function constructDfnAux(upperDfn, dfn) {
+        if (dfn.length <= 0) {
+            return upperDfn;
+        }
+        let s = " ";
+        for (let i = 0; i < dfn.length; i++) {
+            let loopRet = upperDfn + " ";
+            ctnt = dfn[i]['ctnt'];
+            loopRet += constructDfnAux(ctnt, dfn[i]['dfn']);
+            s += loopRet + "\n";
+        }
+        return s;
+    }
+    /*
+    dict[word] is an array.
+    Structure of dict[word][i]:
+        Returns {head, dfn}, where
+                   dfn = (list of {ctnt, dfn, exs, qts}) or []
+                  ctnt = contents (str)
+                   exs = list of examples (str)
+        and        qts = list of quotes (str)
+        see definition of head. (ex: head(tested) = test)
+    */
+    if (!(word in dict)) {
+        return "Word not found in dictionary.";
+    }
+    let ret = "";
+    for (let i = 0; i < dict[word].length; i++) {
+        ret += constructDfnAux("", dict[word][i]['dfn']) + "\n";
+    }
+    return ret;
+}
 
 function getFirstLetter(word) {
     const letters = "abcdefghijklmnopqrstuvwxyz";
@@ -19,18 +53,9 @@ function getDefinition(word) {
     fetch(url)
         .then((response) => response.json()) //assuming file contains json
         .then((dict) => { 
-            let s = "";
-            for (let i = 0; i < dict[word].length; i++) {
-                let acception_dfn = dict[word][i]['dfn'];
-                for (let j = 0; j < acception_dfn.length; j++) {
-                    let ctnt = acception_dfn[j]['ctnt'];
-                    s += ctnt + "\n\n";
-                }
-            }
-            dict = null;
-            alert(s);
+            let dfn = constructDfn(dict, word);
+            alert(dfn);
         });
-    //dict = getA();
 }
 
 function doubleClickEventHandler() {
