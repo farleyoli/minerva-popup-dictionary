@@ -15,7 +15,9 @@
       "js": ["content.js"]
     }
   ],
-
+  "web_accessible_resources": [
+      "a.json"
+  ],
   "page_action": {
     "default_popup": "popup.html",
     "default_icon": {

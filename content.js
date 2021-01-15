@@ -1,13 +1,21 @@
 // content.js
 
+function getDefinition(word) {
+    const url = chrome.runtime.getURL('./a.json');
+    fetch(url)
+        .then((response) => response.json()) //assuming file contains json
+        .then((dict) => {
+             alert(dict[word][0]['dfn'][0]['ctnt']);
+        });
+    //dict = getA();
+}
+
 function doubleClickEventHandler() {
     let pos = getSelectedPosition();
-    let beg = pos[0];
-    let end = pos[1];
     let body = document.body;
     let allText = body.textContent || body.innerText;
-    //alert(t);
-    alert(allText.slice(beg, end));
+    let word = allText.slice(pos[0], pos[1]); 
+    getDefinition(word);
 }
 
 
@@ -24,7 +32,7 @@ function getSelectedPosition() {
     } else if (document.selection) {
         selection = document.selection.createRange();
     } else {
-        return "";
+        return [];
     }
 
     let range = selection.getRangeAt(0);
