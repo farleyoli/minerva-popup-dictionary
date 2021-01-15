@@ -1,11 +1,34 @@
 // content.js
 
+
+function getFirstLetter(word) {
+    const letters = "abcdefghijklmnopqrstuvwxyz";
+    if (word.length == 0) {
+        return "other"
+    }
+    if (letters.indexOf(word[0].toLowerCase()) >= 0) {
+        return word[0].toLowerCase();
+    }
+    return "other";
+}
+
 function getDefinition(word) {
-    const url = chrome.runtime.getURL('./a.json');
+    let firstLetter = getFirstLetter(word);
+    let dictAdress = './dictionary/' + firstLetter + '.json';
+    const url = chrome.runtime.getURL('./dictionary/a.json');
     fetch(url)
         .then((response) => response.json()) //assuming file contains json
-        .then((dict) => {
-             alert(dict[word][0]['dfn'][0]['ctnt']);
+        .then((dict) => { 
+            let s = "";
+            for (let i = 0; i < dict[word].length; i++) {
+                let acception_dfn = dict[word][i]['dfn'];
+                for (let j = 0; j < acception_dfn.length; j++) {
+                    let ctnt = acception_dfn[j]['ctnt'];
+                    s += ctnt + "\n\n";
+                }
+            }
+            dict = null;
+            alert(s);
         });
     //dict = getA();
 }

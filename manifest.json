@@ -16,7 +16,7 @@
     }
   ],
   "web_accessible_resources": [
-      "a.json"
+      "dictionary/*.json"
   ],
   "page_action": {
     "default_popup": "popup.html",
