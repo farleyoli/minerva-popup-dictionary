@@ -1,6 +1,24 @@
 // content.js
 // TODO: create pop-up; transform dictionary definitions to html; when doing it, get id of each acception (path in tree) and add it to id of div; use css-flex; create connection to anki-connect; get phrase, set parameters and construct
 
+
+function constructPopup(x, y, width, height, text) {
+    const newDiv = document.createElement("div");
+    const newContent = document.createTextNode(text);
+    newDiv.appendChild(newContent);
+    newDiv.style.position = 'fixed';
+    newDiv.style.top = x.toString() + 'px';
+    newDiv.style.left = y.toString() + 'px';
+    newDiv.style.width = width.toString() + 'px';
+    newDiv.style.height = height.toString() + 'px';
+    newDiv.style.backgroundColor = 'white';
+    newDiv.style.zIndex = '1000';
+    newDiv.style.overflow = 'scroll';
+    newDiv.style.overflowX = 'hidden';
+    newDiv.style.overflowY = 'auto';
+    document.body.appendChild(newDiv);
+}
+
 function constructDfn(dict, word) {
     // Use the word "acid" to test stuff.
     function constructDfnAux(upperDfn, dfn) {
@@ -55,7 +73,8 @@ function getDefinition(word) {
         .then((response) => response.json())
         .then((dict) => { 
             let dfn = constructDfn(dict, word);
-            alert(dfn);
+            constructPopup(100, 100, 300, 100, dfn);
+            //alert(dfn);
         });
 }
 
