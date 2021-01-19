@@ -1,4 +1,5 @@
 // content.js
+// TODO: create pop-up; transform dictionary definitions to html; when doing it, get id of each acception (path in tree) and add it to id of div; use css-flex; create connection to anki-connect; get phrase, set parameters and construct
 
 function constructDfn(dict, word) {
     // Use the word "acid" to test stuff.
@@ -49,9 +50,9 @@ function getFirstLetter(word) {
 function getDefinition(word) {
     let firstLetter = getFirstLetter(word);
     let dictAdress = './dictionary/' + firstLetter + '.json';
-    const url = chrome.runtime.getURL('./dictionary/a.json');
+    const url = chrome.runtime.getURL(dictAdress);
     fetch(url)
-        .then((response) => response.json()) //assuming file contains json
+        .then((response) => response.json())
         .then((dict) => { 
             let dfn = constructDfn(dict, word);
             alert(dfn);
