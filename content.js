@@ -13,9 +13,11 @@ function isFirstLetterCapital(word) {
 }
 
 function constructPopup(x, y, width, height, dfnDiv) {
+    //TODO: use CSS file to set this properties through a class
     //const newDiv = document.createElement("div");
+    dfnDiv.style.boxShadow = "1px 1px 8px 8px grey";
     dfnDiv.style.position = 'fixed';
-    dfnDiv.style.fontSize = '10px';
+    dfnDiv.style.fontSize = '13px';
     dfnDiv.style.top = x.toString() + 'px';
     dfnDiv.style.left = y.toString() + 'px';
     dfnDiv.style.width = width.toString() + 'px';
@@ -31,7 +33,7 @@ function constructPopup(x, y, width, height, dfnDiv) {
 
 function constructDfn(dict, word) {
     const retDiv = document.createElement("div");
-    // Use the word "acid" to test stuff.
+    // Use the words "draw", "acid" to test stuff.
     function constructDfnAux(dfn) {
         const ret = document.createElement("div");
         if (dfn.length <= 0) {
@@ -90,7 +92,7 @@ function getDefinition(word) {
         .then((response) => response.json())
         .then((dict) => { 
             let dfnDiv = constructDfn(dict, word);
-            constructPopup(100, 100, 300, 100, dfnDiv);
+            constructPopup(100, 100, 420, 270, dfnDiv);
             //alert(dfn);
         });
 }
