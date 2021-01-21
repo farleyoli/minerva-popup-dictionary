@@ -85,7 +85,6 @@ function getFirstLetter(word) {
 
 function getDefinition(word) {
     let firstLetter = getFirstLetter(word);
-    console.log(firstLetter);
     let dictAdress = './dictionary/' + firstLetter + '.json';
     const url = chrome.runtime.getURL(dictAdress);
     fetch(url)
@@ -93,6 +92,7 @@ function getDefinition(word) {
         .then((dict) => { 
             let dfnDiv = constructDfn(dict, word);
             constructPopup(100, 100, 420, 270, dfnDiv);
+            dfnDiv.classList.add("minerva-popup");
             //alert(dfn);
         });
 }
@@ -102,7 +102,11 @@ function doubleClickEventHandler() {
     let body = document.body;
     let allText = body.textContent || body.innerText;
     let word = allText.slice(pos[0], pos[1]); 
-    getDefinition(word);
+    let openPopups = document.getElementsByClassName("minerva-popup");
+    for (let i = 0; i < openPopups.length; i++) {
+        openPopups[i].remove();
+    }
+    getDefinition(word.toLowerCase());
 }
 
 
