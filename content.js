@@ -1,5 +1,6 @@
 // content.js
 // TODO: transform dictionary definitions to html; when doing it, get id of each acception (path in tree) and add it to id of div; use css-flex; create connection to anki-connect; get phrase, set parameters and construct
+// TODO: check if dictionary is getting unloaded from memory.
 
 function isFirstLetterCapital(word) {
     const letters = "abcdefghijklmnopqrstuvwxyz";
@@ -15,6 +16,12 @@ function isFirstLetterCapital(word) {
 function constructPopup(x, y, width, height, dfnDiv) {
     //TODO: use CSS file to set this properties through a class
     //const newDiv = document.createElement("div");
+    dfnDiv.style.display = "flex";
+    dfnDiv.style.flexDirection = "column";
+    dfnDiv.style.wrap = "nowrap";
+    dfnDiv.style.paddingTop = "0.75%";
+    dfnDiv.style.paddingRight = "1%";
+    dfnDiv.style.paddingBottom = "0.75%";
     dfnDiv.style.boxShadow = "1px 1px 8px 8px grey";
     dfnDiv.style.position = 'fixed';
     dfnDiv.style.fontSize = '13px';
@@ -42,6 +49,8 @@ function constructDfn(dict, word) {
         for (let i = 0; i < dfn.length; i++) {
             const textNode = document.createElement("div");
             textNode.innerText = dfn[i]['ctnt'];
+            textNode.style.marginTop = "1.5%";
+            textNode.style.marginBottom = "1.5%";
             ret.appendChild(textNode);
             ret.appendChild(constructDfnAux(dfn[i]['dfn']));
         }
@@ -91,16 +100,16 @@ function getDefinition(word) {
         .then((response) => response.json())
         .then((dict) => { 
             let dfnDiv = constructDfn(dict, word);
-            constructPopup(100, 100, 420, 270, dfnDiv);
+            constructPopup(100, 100, 350, 250, dfnDiv);
             dfnDiv.id = "minerva-popup";
             //alert(dfn);
         });
 }
 
 function isInsidePopup(x, y) {
-    //constructPopup(100, 100, 420, 270, dfnDiv);
-    if (x >= 100 && x <= 100 + 420) {
-        if(y >= 100 && y <= 100 + 270) {
+    //constructPopup(100, 100, 350, 250, dfnDiv);
+    if (x >= 100 && x <= 100 + 350) {
+        if(y >= 100 && y <= 100 + 250) {
             return true;
         }
     }
