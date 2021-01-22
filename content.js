@@ -92,19 +92,42 @@ function getDefinition(word) {
         .then((dict) => { 
             let dfnDiv = constructDfn(dict, word);
             constructPopup(100, 100, 420, 270, dfnDiv);
-            dfnDiv.classList.add("minerva-popup");
+            dfnDiv.id = "minerva-popup";
             //alert(dfn);
         });
 }
 
+function isInsidePopup(x, y) {
+    //constructPopup(100, 100, 420, 270, dfnDiv);
+    if (x >= 100 && x <= 100 + 420) {
+        if(y >= 100 && y <= 100 + 270) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function clickEventHandler() {
+    let e = window.event;
+    let mouseX = e.clientX;
+    let mouseY = e.clientY;
+    let isInside = isInsidePopup(mouseX, mouseY);
+    if (isInside) {
+        return;
+    }
+    let openPopup = document.getElementById("minerva-popup");
+    if (openPopup != null) {
+        openPopup.remove();
+    }
+}
 function doubleClickEventHandler() {
     let pos = getSelectedPosition();
     let body = document.body;
     let allText = body.textContent || body.innerText;
     let word = allText.slice(pos[0], pos[1]); 
-    let openPopups = document.getElementsByClassName("minerva-popup");
-    for (let i = 0; i < openPopups.length; i++) {
-        openPopups[i].remove();
+    let openPopup = document.getElementById("minerva-popup");
+    if (openPopup != null) {
+        openPopup.remove();
     }
     getDefinition(word.toLowerCase());
 }
@@ -142,3 +165,4 @@ function getSelectedPosition() {
 }
 
 document.body.addEventListener("dblclick", doubleClickEventHandler);
+document.body.addEventListener("click", clickEventHandler);
