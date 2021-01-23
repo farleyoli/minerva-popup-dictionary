@@ -1,7 +1,10 @@
-// content.js
-// TODO: transform dictionary definitions to html; when doing it, get id of each acception (path in tree) and add it to id of div; use css-flex; create connection to anki-connect; get phrase, set parameters and construct
+// TODO: create connection to anki-connect; get phrase, set parameters and construct
 // TODO: check if dictionary is getting unloaded from memory.
 
+/**
+ * @param {string} A word.
+ * @return {boolean} True iff first letter of word is Capital.
+ */
 function isFirstLetterCapital(word) {
     const letters = "abcdefghijklmnopqrstuvwxyz";
     if (word.length == 0) {
@@ -13,9 +16,18 @@ function isFirstLetterCapital(word) {
     return false;
 }
 
+/**
+ * This function receives the popup div (with content already inside), 
+ * adds CSS properties to it and embeds it in the document.
+ * @param {number} Horizontal position of upper-left corner of popup.
+ * @param {number} Vertical position of upper-left corner of popup.
+ * @param {number} Width of popup.
+ * @param {number} Height of popup.
+ * @param {Object} Div HTML object which is to be added to the document's
+ * body.
+ */
 function constructPopup(x, y, width, height, dfnDiv) {
     //TODO: use CSS file to set this properties through a class
-    //const newDiv = document.createElement("div");
     dfnDiv.style.display = "flex";
     dfnDiv.style.flexDirection = "column";
     dfnDiv.style.wrap = "nowrap";
@@ -38,9 +50,17 @@ function constructPopup(x, y, width, height, dfnDiv) {
     document.body.appendChild(dfnDiv);
 }
 
+/**
+ * This method gets the dictionary, recursively (see structure in
+ * comments inside) parses it and constructs a div element
+ * containing the meaning of the word. CSS is added by a different method.
+ * @param {Object} Dictionary JSON file containing word.
+ * @param {Object} Word whose meaning is to be written.
+ * @return {Object} Div HTML object with definition to be embedded in popup.
+ */
 function constructDfn(dict, word) {
-    const retDiv = document.createElement("div");
     // Use the words "draw", "acid" to test stuff.
+    const retDiv = document.createElement("div");
     function constructDfnAux(dfn) {
         const ret = document.createElement("div");
         if (dfn.length <= 0) {
@@ -71,11 +91,11 @@ function constructDfn(dict, word) {
         retDiv.innerText = "Word not found in dictionary.";
         return retDiv;
     }
-    //return retDiv;
 
     for (let i = 0; i < dict[word].length; i++) {
         retDiv.appendChild(constructDfnAux(dict[word][i]['dfn']));
     }
+
     return retDiv;
 }
 
@@ -143,8 +163,8 @@ function doubleClickEventHandler() {
 
 
 /**
- * Get position of selected text inside inner text of body
- * @return {Number[]} beginning and ending position.
+ * Get position of selected text inside inner text of body.
+ * @return {Array<Number>} Beginning and ending position.
  */
 function getSelectedPosition() {
     let selection = "";
