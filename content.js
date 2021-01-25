@@ -55,7 +55,7 @@ function constructPopup(x, y, width, height, dfnDiv) {
  * comments inside) parses it and constructs a div element
  * containing the meaning of the word. CSS is added by a different method.
  * @param {Object} Dictionary JSON file containing word.
- * @param {Object} Word whose meaning is to be written.
+ * @param {string} Word whose meaning is to be written.
  * @return {Object} Div HTML object with definition to be embedded in popup.
  */
 function constructDfn(dict, word) {
@@ -99,6 +99,10 @@ function constructDfn(dict, word) {
     return retDiv;
 }
 
+/**
+ * @param {string} A string.
+ * @return {string} First letter of word.
+ */
 function getFirstLetter(word) {
     const letters = "abcdefghijklmnopqrstuvwxyz";
     if (word.length == 0) {
@@ -111,8 +115,11 @@ function getFirstLetter(word) {
     return "other";
 }
 
-
-function getDefinition(word) {
+/**
+ * This function takes a word and adds its popup to the DOM.
+ * @param {string} Word to be searched in dictionary.
+ */
+function processDefinition(word) {
     let firstLetter = getFirstLetter(word);
     let dictAdress = './dictionary/' + firstLetter + '.json';
     const url = chrome.runtime.getURL(dictAdress);
@@ -120,14 +127,18 @@ function getDefinition(word) {
         .then((response) => response.json())
         .then((dict) => { 
             let dfnDiv = constructDfn(dict, word);
-            constructPopup(100, 100, 350, 250, dfnDiv);
             dfnDiv.id = "minerva-popup";
-            //alert(dfn);
+            constructPopup(100, 100, 350, 250, dfnDiv);
         });
 }
 
+/**
+ * This functions returns true if (x,y) is inside the definition popup,
+ * and false otherwise.
+ * @param {number} x-position.
+ * @param {number} y-position.
+ */
 function isInsidePopup(x, y) {
-    //constructPopup(100, 100, 350, 250, dfnDiv);
     if (x >= 100 && x <= 100 + 350) {
         if(y >= 100 && y <= 100 + 250) {
             return true;
@@ -136,6 +147,10 @@ function isInsidePopup(x, y) {
     return false;
 }
 
+/**
+ * This function handles single-clicks from the user. It removes the popup
+ * from the DOM if the user clicked outside it.
+ */
 function clickEventHandler() {
     let e = window.event;
     let mouseX = e.clientX;
@@ -149,6 +164,12 @@ function clickEventHandler() {
         openPopup.remove();
     }
 }
+
+/**
+ * This function handles double-clicks from the user. It adds the definition
+ * of the selected word by the user to a popup and adds the popup to the
+ * DOM.
+ */
 function doubleClickEventHandler() {
     let pos = getSelectedPosition();
     let body = document.body;
@@ -158,13 +179,13 @@ function doubleClickEventHandler() {
     if (openPopup != null) {
         openPopup.remove();
     }
-    getDefinition(word.toLowerCase());
+    let dfnDiv = processDefinition(word.toLowerCase());
 }
 
 
 /**
- * Get position of selected text inside inner text of body.
- * @return {Array<Number>} Beginning and ending position.
+ * This function gets the position of selected text inside inner text of body.
+ * @return {Array<number>} Beginning and ending position of selection.
  */
 function getSelectedPosition() {
     let selection = "";
