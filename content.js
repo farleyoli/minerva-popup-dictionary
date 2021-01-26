@@ -5,6 +5,8 @@
  * @param {string} A word.
  * @return {boolean} True iff first letter of word is Capital.
  */
+
+
 function isFirstLetterCapital(word) {
     const letters = "abcdefghijklmnopqrstuvwxyz";
     if (word.length == 0) {
@@ -28,25 +30,10 @@ function isFirstLetterCapital(word) {
  */
 function constructPopup(x, y, width, height, dfnDiv) {
     //TODO: use CSS file to set this properties through a class
-    dfnDiv.style.display = "flex";
-    dfnDiv.style.flexDirection = "column";
-    dfnDiv.style.wrap = "nowrap";
-    dfnDiv.style.paddingTop = "0.75%";
-    dfnDiv.style.paddingRight = "1%";
-    dfnDiv.style.paddingBottom = "0.75%";
-    dfnDiv.style.boxShadow = "1px 1px 8px 8px grey";
-    dfnDiv.style.position = 'fixed';
-    dfnDiv.style.fontSize = '13px';
     dfnDiv.style.top = x.toString() + 'px';
     dfnDiv.style.left = y.toString() + 'px';
     dfnDiv.style.width = width.toString() + 'px';
     dfnDiv.style.height = height.toString() + 'px';
-    dfnDiv.style.backgroundColor = 'white';
-    dfnDiv.style.zIndex = '1000';
-    dfnDiv.style.overflow = 'scroll';
-    dfnDiv.style.overflowX = 'hidden';
-    dfnDiv.style.overflowY = 'auto';
-    dfnDiv.style.borderRadius = '10px';
     document.body.appendChild(dfnDiv);
 }
 

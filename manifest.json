@@ -12,7 +12,8 @@
       "matches": [
         "<all_urls>"
       ],
-      "js": ["content.js"]
+      "js": ["content.js"],
+      "css": ["popup.css"]
     }
   ],
   "web_accessible_resources": [

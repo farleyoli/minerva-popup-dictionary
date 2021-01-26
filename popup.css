@@ -1,0 +1,17 @@
+#minerva-popup {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    padding-top: 0.75%;
+    padding-right: 1%;
+    padding-bottom: 0.75%;
+    box-shadow: 1px 1px 8px 8px grey;
+    position: fixed;
+    font-size: 13px;
+    background-color: white;
+    z-index: 1000;
+    overflow: scroll;
+    overflow-x: hidden;
+    overflow-y: auto;
+    border-radius: 10px;
+}
