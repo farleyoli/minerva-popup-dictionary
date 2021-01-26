@@ -120,14 +120,27 @@ function processDefinition(word) {
 }
 
 /**
+ * @return {Array[number]} (width, height) of definition popup if it exists; [0,0] otherwise.
+ */
+function getPopupDimensions() {
+    let popup = document.getElementById("minerva-popup");
+    if (popup === null) {
+        return [0,0];
+    }
+    let popupDimensions = popup.getBoundingClientRect();
+    return [popupDimensions['width'], popupDimensions['height']];
+}
+
+/**
  * This functions returns true if (x,y) is inside the definition popup,
  * and false otherwise.
  * @param {number} x-position.
  * @param {number} y-position.
  */
 function isInsidePopup(x, y) {
-    if (x >= 100 && x <= 100 + 350) {
-        if(y >= 100 && y <= 100 + 250) {
+    let dim = getPopupDimensions();
+    if (x >= 100 && x <= 100 + dim[0]) {
+        if(y >= 100 && y <= 100 + dim[1]) {
             return true;
         }
     }
