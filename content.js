@@ -1,12 +1,10 @@
 // TODO: create connection to anki-connect; get phrase, set parameters and construct
-// TODO: check if dictionary is getting unloaded from memory.
+
 
 /**
  * @param {string} A word.
  * @return {boolean} True iff first letter of word is Capital.
  */
-
-
 function isFirstLetterCapital(word) {
     const letters = "abcdefghijklmnopqrstuvwxyz";
     if (word.length == 0) {
@@ -56,8 +54,8 @@ function constructDfn(dict, word) {
         for (let i = 0; i < dfn.length; i++) {
             const textNode = document.createElement("div");
             textNode.innerText = dfn[i]['ctnt'];
-            textNode.style.marginTop = "1.5%";
-            textNode.style.marginBottom = "1.5%";
+            textNode.style.marginTop = "2.5%";
+            textNode.style.marginBottom = "2.5%";
             ret.appendChild(textNode);
             ret.appendChild(constructDfnAux(dfn[i]['dfn']));
         }
