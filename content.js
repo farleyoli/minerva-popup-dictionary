@@ -1,4 +1,6 @@
-// TODO: create connection to anki-connect; get phrase, set parameters and construct
+//TODO: deal with ' sour|'.
+//TODO: set position of popup close to mouse-click.
+//TODO: create connection to anki-connect; get phrase, set parameters and construct
 
 
 /**
@@ -36,6 +38,21 @@ function constructPopup(x, y, width, height, dfnDiv) {
 }
 
 /**
+ * This function "cleans" some aspects of the definitions taken from
+ * Wiktionary where the parsing may not have gone so well.
+ * @param {string} Content (usually definition) which is to be cleaned.
+ * @return {string} Cleaned content.
+ */
+function processContent(content) {
+    ret = "";
+    const regex = /\s[^\s]+\|/gi;
+    const regex2 = /^.*\|/gi;
+    ret = content.replace(regex, "");
+    ret = ret.replace(regex2, "");
+    return ret;
+}
+
+/**
  * This method gets the dictionary, recursively (see structure in
  * comments inside) parses it and constructs a div element
  * containing the meaning of the word. CSS is added by a different method.
@@ -53,7 +70,7 @@ function constructDfn(dict, word) {
         }
         for (let i = 0; i < dfn.length; i++) {
             const textNode = document.createElement("div");
-            textNode.innerText = dfn[i]['ctnt'];
+            textNode.innerText = processContent(dfn[i]['ctnt']);
             textNode.style.marginTop = "2.5%";
             textNode.style.marginBottom = "2.5%";
             ret.appendChild(textNode);
