@@ -1,4 +1,4 @@
-//TODO: deal with ' sour|'.
+//TODO: use pronunciation file which I already have to give pronunciation of terms.
 //TODO: set position of popup close to mouse-click.
 //TODO: create connection to anki-connect; get phrase, set parameters and construct
 
@@ -39,7 +39,9 @@ function constructPopup(x, y, width, height, dfnDiv) {
 
 /**
  * This function "cleans" some aspects of the definitions taken from
- * Wiktionary where the parsing may not have gone so well.
+ * Wiktionary where the parsing may not have gone so well. This function
+ * should be deleted when the JSON files from Wiktionary are of better
+ * quality.
  * @param {string} Content (usually definition) which is to be cleaned.
  * @return {string} Cleaned content.
  */
@@ -47,8 +49,10 @@ function processContent(content) {
     ret = "";
     const regex = /\s[^\s]+\|/gi;
     const regex2 = /^.*\|/gi;
+    const regex3 = /singular(?=[a-z])/gi;
     ret = content.replace(regex, "");
     ret = ret.replace(regex2, "");
+    ret = ret.replace(regex3, "singular ");
     return ret;
 }
 
@@ -118,6 +122,28 @@ function getFirstLetter(word) {
 }
 
 /**
+ * This function takes a word and adds its Frequency to the definition popup,
+ * if it is open.
+ * @param {string} Word whose frequency is to be added.
+ */
+function addFrequency(word) {
+    freqAdress = './dictionary/freq.json';
+    const url = chrome.runtime.getURL(freqAdress);
+    fetch(url)
+        .then((response) => response.json())
+        .then((freqMap) => { 
+            let freq = freqMap[word];
+            let openPopup = document.getElementById("minerva-popup");
+            if (openPopup != null) {
+                let freqDiv = document.createElement("div");
+                freqDiv.id = "frequency";
+                freqDiv.innerText = "Frequency: " + freq;
+                openPopup.insertBefore(freqDiv, openPopup.childNodes[0]);
+            }
+        });
+}
+
+/**
  * This function takes a word and adds its popup to the DOM.
  * @param {string} Word to be searched in dictionary.
  */
@@ -131,6 +157,7 @@ function processDefinition(word) {
             let dfnDiv = constructDfn(dict, word);
             dfnDiv.id = "minerva-popup";
             constructPopup(100, 100, 350, 250, dfnDiv);
+            addFrequency(word);
         });
 }
 
