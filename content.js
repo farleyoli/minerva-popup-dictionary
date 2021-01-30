@@ -50,7 +50,7 @@ function processContent(content) {
     const regex = /\s[^\s]+\|/gi;
     const regex2 = /^.*\|/gi;
     const regex3 = /singular(?=[a-z])/gi;
-    ret = content.replace(regex, "");
+    ret = content.replace(regex, " ");
     ret = ret.replace(regex2, "");
     ret = ret.replace(regex3, "singular ");
     return ret;
@@ -122,6 +122,28 @@ function getFirstLetter(word) {
 }
 
 /**
+ * This function takes a word and adds its IPA transcription
+ * to the definition popup, if it exists.
+ * @param {string} Word whose frequency is to be added.
+ */
+function addPronunciation(word) {
+    pronAddress = './dictionary/ipa.json';
+    const url = chrome.runtime.getURL(pronAddress);
+    fetch(url)
+        .then((response) => response.json())
+        .then((pronMap) => { 
+            let pron = pronMap[word];
+            let openPopup = document.getElementById("minerva-popup");
+            if (openPopup != null) {
+                let pronDiv = document.createElement("div");
+                pronDiv.id = "pronunciation";
+                pronDiv.innerText = "/" + pron + "/" ;
+                openPopup.insertBefore(pronDiv, openPopup.childNodes[0]);
+            }
+        });
+}
+
+/**
  * This function takes a word and adds its Frequency to the definition popup,
  * if it is open.
  * @param {string} Word whose frequency is to be added.
@@ -158,6 +180,7 @@ function processDefinition(word) {
             dfnDiv.id = "minerva-popup";
             constructPopup(100, 100, 350, 250, dfnDiv);
             addFrequency(word);
+            addPronunciation(word);
         });
 }
 

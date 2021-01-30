@@ -1,6 +1,7 @@
 #frequency {
     color: grey;
-    margin: auto;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 #minerva-popup {
