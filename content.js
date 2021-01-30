@@ -1,4 +1,3 @@
-//TODO: use pronunciation file which I already have to give pronunciation of terms.
 //TODO: set position of popup close to mouse-click.
 //TODO: create connection to anki-connect; get phrase, set parameters and construct
 
@@ -67,6 +66,9 @@ function processContent(content) {
 function constructDfn(dict, word) {
     // Use the words "draw", "acid" to test stuff.
     const retDiv = document.createElement("div");
+    const header = document.createElement("div");
+    header.id = "header";
+    retDiv.appendChild(header);
     function constructDfnAux(dfn) {
         const ret = document.createElement("div");
         if (dfn.length <= 0) {
@@ -122,8 +124,8 @@ function getFirstLetter(word) {
 }
 
 /**
- * This function takes a word and adds its IPA transcription
- * to the definition popup, if it exists.
+ * This function takes a word and adds the word and its IPA transcription
+ * to the header of the definition popup, if it exists.
  * @param {string} Word whose frequency is to be added.
  */
 function addPronunciation(word) {
@@ -134,18 +136,23 @@ function addPronunciation(word) {
         .then((pronMap) => { 
             let pron = pronMap[word];
             let openPopup = document.getElementById("minerva-popup");
-            if (openPopup != null) {
-                let pronDiv = document.createElement("div");
-                pronDiv.id = "pronunciation";
-                pronDiv.innerText = "/" + pron + "/" ;
-                openPopup.insertBefore(pronDiv, openPopup.childNodes[0]);
+            let header = document.getElementById("header");
+            if (openPopup != null && header != null) {
+                let pronSpan = document.createElement("div");
+                pronSpan.id = "pronunciation";
+                pronSpan.innerText = word + " (/" + pron + "/)" ;
+                if (header.childNodes.length > 0) {
+                    header.insertBefore(pronSpan, header.childNodes[0]);
+                } else {
+                    header.appendChild(pronSpan)
+                }
             }
         });
 }
 
 /**
- * This function takes a word and adds its Frequency to the definition popup,
- * if it is open.
+ * This function takes a word and adds its Frequency to the header of
+ * the definition popup, if it exists.
  * @param {string} Word whose frequency is to be added.
  */
 function addFrequency(word) {
@@ -156,11 +163,12 @@ function addFrequency(word) {
         .then((freqMap) => { 
             let freq = freqMap[word];
             let openPopup = document.getElementById("minerva-popup");
-            if (openPopup != null) {
-                let freqDiv = document.createElement("div");
-                freqDiv.id = "frequency";
-                freqDiv.innerText = "Frequency: " + freq;
-                openPopup.insertBefore(freqDiv, openPopup.childNodes[0]);
+            let header = document.getElementById("header");
+            if (openPopup != null && header != null && freq !== undefined) {
+                let freqSpan = document.createElement("div");
+                freqSpan.id = "frequency";
+                freqSpan.innerText = "Freq: " + freq.replace("\n", "");
+                header.appendChild(freqSpan)
             }
         });
 }

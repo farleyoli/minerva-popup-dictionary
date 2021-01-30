@@ -1,7 +1,19 @@
+#header {
+    font-size: 13px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+}
+
+#pronunciation {
+    text-align: center;
+    width: 45%;
+}
+
 #frequency {
+    text-align: center;
+    width: 45%;
     color: grey;
-    margin-left: auto;
-    margin-right: auto;
 }
 
 #minerva-popup {
@@ -16,7 +28,7 @@
     padding-bottom: 0.75%;
     box-shadow: 1px 1px 8px 8px grey;
     position: fixed;
-    font-size: 0.8em;
+    font-size: 11px;
     background-color: white;
     z-index: 1000;
     overflow: scroll;
