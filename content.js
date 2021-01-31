@@ -1,5 +1,6 @@
 //TODO: set position of popup close to mouse-click.
 //TODO: create connection to anki-connect; get phrase, set parameters and construct
+//TODO: Add numbering to definitions.
 
 
 /**
@@ -52,6 +53,7 @@ function processContent(content) {
     ret = content.replace(regex, " ");
     ret = ret.replace(regex2, "");
     ret = ret.replace(regex3, "singular ");
+    ret = ret.replace("{{", "");
     return ret;
 }
 

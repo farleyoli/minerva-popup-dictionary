@@ -7,13 +7,17 @@
 
 #pronunciation {
     text-align: center;
-    width: 45%;
+    /*width: 45%;*/
+    flex-shrink: 3;
+    /*background-color: green;*/
 }
 
 #frequency {
     text-align: center;
-    width: 45%;
+    /*width: 45%;*/
     color: grey;
+    flex-shrink: 5;
+    /*background-color: blue;*/
 }
 
 #minerva-popup {
