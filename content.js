@@ -1,6 +1,6 @@
 //TODO: set position of popup close to mouse-click.
 //TODO: create connection to anki-connect; get phrase, set parameters and construct
-//TODO: Add numbering to definitions.
+// TODO: Add math rendering to definitions (require option).
 
 
 /**
@@ -77,11 +77,18 @@ function constructDfn(dict, word) {
             return ret;
         }
         for (let i = 0; i < dfn.length; i++) {
-            const textNode = document.createElement("div");
-            textNode.innerText = (i+1).toString() + " " + processContent(dfn[i]['ctnt']);
-            textNode.style.marginTop = "2.5%";
-            textNode.style.marginBottom = "2.5%";
-            ret.appendChild(textNode);
+            const dfnNode = document.createElement("div");
+            const dfnNoNode = document.createElement("span");
+            dfnNoNode.id = "minerva-definition-number";
+            dfnNoNode.innerText = (i+1).toString();
+            dfnNode.appendChild(dfnNoNode);
+            const textNode = document.createElement("span");
+            //textNode.innerText = (i+1).toString() + " " + processContent(dfn[i]['ctnt']);
+            textNode.innerText = processContent(dfn[i]['ctnt']);
+            dfnNode.style.marginTop = "2.5%";
+            dfnNode.style.marginBottom = "2.5%";
+            dfnNode.appendChild(textNode);
+            ret.appendChild(dfnNode);
             ret.appendChild(constructDfnAux(dfn[i]['dfn']));
         }
         ret.style.marginLeft = "5%";

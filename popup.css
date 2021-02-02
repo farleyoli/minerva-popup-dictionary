@@ -1,3 +1,9 @@
+#minerva-definition-number {
+    color: brown;
+    margin-right: 5px;
+}
+
+
 #minerva-header {
     font-size: 13px;
     display: flex;
