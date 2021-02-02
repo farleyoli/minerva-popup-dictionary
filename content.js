@@ -69,7 +69,7 @@ function constructDfn(dict, word) {
     // Use the words "draw", "acid" to test stuff.
     const retDiv = document.createElement("div");
     const header = document.createElement("div");
-    header.id = "header";
+    header.id = "minerva-header";
     retDiv.appendChild(header);
     function constructDfnAux(dfn) {
         const ret = document.createElement("div");
@@ -78,7 +78,7 @@ function constructDfn(dict, word) {
         }
         for (let i = 0; i < dfn.length; i++) {
             const textNode = document.createElement("div");
-            textNode.innerText = processContent(dfn[i]['ctnt']);
+            textNode.innerText = (i+1).toString() + " " + processContent(dfn[i]['ctnt']);
             textNode.style.marginTop = "2.5%";
             textNode.style.marginBottom = "2.5%";
             ret.appendChild(textNode);
@@ -138,10 +138,10 @@ function addPronunciation(word) {
         .then((pronMap) => { 
             let pron = pronMap[word];
             let openPopup = document.getElementById("minerva-popup");
-            let header = document.getElementById("header");
+            let header = document.getElementById("minerva-header");
             if (openPopup != null && header != null) {
                 let pronSpan = document.createElement("div");
-                pronSpan.id = "pronunciation";
+                pronSpan.id = "minerva-pronunciation";
                 pronSpan.innerText = word + " (/" + pron + "/)" ;
                 if (header.childNodes.length > 0) {
                     header.insertBefore(pronSpan, header.childNodes[0]);
@@ -165,10 +165,10 @@ function addFrequency(word) {
         .then((freqMap) => { 
             let freq = freqMap[word];
             let openPopup = document.getElementById("minerva-popup");
-            let header = document.getElementById("header");
+            let header = document.getElementById("minerva-header");
             if (openPopup != null && header != null && freq !== undefined) {
                 let freqSpan = document.createElement("div");
-                freqSpan.id = "frequency";
+                freqSpan.id = "minerva-frequency";
                 freqSpan.innerText = "Freq: " + freq.replace("\n", "");
                 header.appendChild(freqSpan)
             }

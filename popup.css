@@ -1,18 +1,18 @@
-#header {
+#minerva-header {
     font-size: 13px;
     display: flex;
     flex-direction: row;
     justify-content: space-around;
 }
 
-#pronunciation {
+#minerva-pronunciation {
     text-align: center;
     /*width: 45%;*/
     flex-shrink: 3;
     /*background-color: green;*/
 }
 
-#frequency {
+#minerva-frequency {
     text-align: center;
     /*width: 45%;*/
     color: grey;
