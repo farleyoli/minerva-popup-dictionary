@@ -1,6 +1,7 @@
-//TODO: set position of popup close to mouse-click.
-//TODO: create connection to anki-connect; get phrase, set parameters and construct
+//TODO: Fix isInsidePopup.
+//TODO: Create connection to anki-connect; get phrase, set parameters and construct
 // TODO: Add math rendering to definitions (require option).
+// TODO: Leave header always shown (when user scrolls) in popup.
 
 
 /**
@@ -30,8 +31,8 @@ function isFirstLetterCapital(word) {
  */
 function constructPopup(x, y, width, height, dfnDiv) {
     //TODO: use CSS file to set this properties through a class
-    dfnDiv.style.top = x.toString() + 'px';
-    dfnDiv.style.left = y.toString() + 'px';
+    dfnDiv.style.left = x.toString() + 'px';
+    dfnDiv.style.top = y.toString() + 'px';
     dfnDiv.style.width = width.toString() + 'px';
     dfnDiv.style.height = height.toString() + 'px';
     document.body.appendChild(dfnDiv);
@@ -66,7 +67,7 @@ function processContent(content) {
  * @return {Object} Div HTML object with definition to be embedded in popup.
  */
 function constructDfn(dict, word) {
-    // Use the words "draw", "acid" to test stuff.
+    // Use the words "draw", "acid", "head" and "hand" (triple indentation) to test stuff.
     const retDiv = document.createElement("div");
     const header = document.createElement("div");
     header.id = "minerva-header";
@@ -182,11 +183,62 @@ function addFrequency(word) {
         });
 }
 
+/** 
+ * In this function, we have to consider the case where the cursor is in the
+ * right-lower corner of the screen and the case where it is elsewhere.
+ * @param {number} Width of the popup.
+ * @param {number} Height of the popup.
+ * @param {number} Horizontal position of mouse when double click happened.
+ * @param {number} Vertical position of mouse when double click happened.
+ * @return {Array[number]} Position (x0,y0,x1,y1) of upperleft corner and bottomright corner of the popup.
+ */
+function getPopupPosition(popupW, popupH, mouseX, mouseY) {
+    //screenW = window.screen.availWidth;
+    //screenH = window.screen.availHeight;
+    let screenW = window.innerWidth
+    let screenH = window.innerHeight
+    //let offset = 5;
+    let offset = 0;
+    let retX0 = mouseX + offset;
+    let retY0 = mouseY + offset;
+
+    let retX1 = retX0 + popupW;
+    let retY1 = retY0 + popupH;
+
+    if (retX1 > screenW) {
+        retX0 = mouseX - popupW + offset;
+    }
+    if (retY1 > screenH) {
+        retY0 = mouseY - popupH + offset;
+    }
+
+    /*
+    if (retX1 > screenW) {
+        if (retY1 > screenH) {
+            retX0 = mouseX - popupW + offset;
+            retY0 = mouseY - popupH + offset;
+        } else {
+            retX0 = mouseX - popupW + offset;
+        }
+    } else if (retY1 > screenW) {
+        retY0 = mouseY - popupH + offset;
+    }
+    */
+
+    retX1 = retX0 + popupW;
+    retY1 = retY0 + popupH;
+
+    return [retX0, retY0, retX1, retY1];
+}
+
+
 /**
  * This function takes a word and adds its popup to the DOM.
  * @param {string} Word to be searched in dictionary.
+ * @param {number} Horizontal position of mouse when double click happened.
+ * @param {number} Vertical position of mouse when double click happened.
  */
-function processDefinition(word) {
+function processDefinition(word, mouseX, mouseY) {
     let firstLetter = getFirstLetter(word);
     let dictAdress = './dictionary/' + firstLetter + '.json';
     const url = chrome.runtime.getURL(dictAdress);
@@ -195,7 +247,8 @@ function processDefinition(word) {
         .then((dict) => { 
             let dfnDiv = constructDfn(dict, word);
             dfnDiv.id = "minerva-popup";
-            constructPopup(100, 100, 350, 250, dfnDiv);
+            pos = getPopupPosition(350, 250, mouseX, mouseY);
+            constructPopup(pos[0], pos[1], pos[2]-pos[0], pos[3]-pos[1], dfnDiv);
             addFrequency(word);
             addPronunciation(word);
         });
@@ -253,6 +306,10 @@ function clickEventHandler() {
  * DOM.
  */
 function doubleClickEventHandler() {
+    let e = window.event;
+    let mouseX = e.clientX;
+    let mouseY = e.clientY;
+
     let pos = getSelectedPosition();
     let body = document.body;
     let allText = body.textContent || body.innerText;
@@ -261,7 +318,7 @@ function doubleClickEventHandler() {
     if (openPopup != null) {
         openPopup.remove();
     }
-    let dfnDiv = processDefinition(word.toLowerCase());
+    let dfnDiv = processDefinition(word.toLowerCase(), mouseX, mouseY);
 }
 
 
