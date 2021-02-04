@@ -1,4 +1,3 @@
-//TODO: Fix isInsidePopup.
 //TODO: Create connection to anki-connect; get phrase, set parameters and construct
 // TODO: Add math rendering to definitions (require option).
 // TODO: Leave header always shown (when user scrolls) in popup.
@@ -195,8 +194,8 @@ function addFrequency(word) {
 function getPopupPosition(popupW, popupH, mouseX, mouseY) {
     //screenW = window.screen.availWidth;
     //screenH = window.screen.availHeight;
-    let screenW = window.innerWidth
-    let screenH = window.innerHeight
+    let screenW = window.innerWidth-20;
+    let screenH = window.innerHeight-20;
     //let offset = 5;
     let offset = 0;
     let retX0 = mouseX + offset;
@@ -269,13 +268,23 @@ function getPopupDimensions() {
 /**
  * This functions returns true if (x,y) is inside the definition popup,
  * and false otherwise.
- * @param {number} x-position.
- * @param {number} y-position.
+ * @param {number} x-position of mouse.
+ * @param {number} y-position of mouse.
+ * @param {Object} HTML object of the popup.
  */
-function isInsidePopup(x, y) {
-    let dim = getPopupDimensions();
-    if (x >= 100 && x <= 100 + dim[0]) {
-        if(y >= 100 && y <= 100 + dim[1]) {
+function isInsidePopup(x, y, popup) {
+    //dfnDiv.style.left = x.toString() + 'px';
+    //dfnDiv.style.top = y.toString() + 'px';
+    //dfnDiv.style.width = width.toString() + 'px';
+    //dfnDiv.style.height = height.toString() + 'px';
+    let popupX = parseInt(popup.style.left.substring(0, popup.style.left.length-2));
+    let popupY = parseInt(popup.style.top.substring(0, popup.style.top.length-2));
+    let width = parseInt(popup.style.width.substring(0, popup.style.width.length-2));
+    let height = parseInt(popup.style.height.substring(0, popup.style.height.length-2));
+
+    //alert([x, y, popupX, popupY, width, height]); 
+    if (x >= popupX && x <= popupX + width) {
+        if(y >= popupY && y <= popupY+height) {
             return true;
         }
     }
@@ -290,12 +299,12 @@ function clickEventHandler() {
     let e = window.event;
     let mouseX = e.clientX;
     let mouseY = e.clientY;
-    let isInside = isInsidePopup(mouseX, mouseY);
-    if (isInside) {
-        return;
-    }
     let openPopup = document.getElementById("minerva-popup");
     if (openPopup != null) {
+        let isInside = isInsidePopup(mouseX, mouseY, openPopup);
+        if (isInside) {
+            return;
+        }
         openPopup.remove();
     }
 }
