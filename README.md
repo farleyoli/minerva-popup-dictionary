@@ -3,7 +3,7 @@
 Minerva Popup Dictionary (MPD) is an extension for Chrome that lets users search for the meanings of a word by clicking it.
 
 <p align="left">
-  <img src="images/usage_example.png" width="300">
+  <img src="images/usage_example.png">
 </p>
 
 ## Instalation
@@ -16,13 +16,13 @@ git clone https://github.com/farleyoli/minerva-popup-dictionary
 Then go to *More tools* followed by *Extensions* in the Chrome options menu.
 
 <p align="left">
-  <img src="images/more_tools_extension.jpg" width="300">
+  <img src="images/more_tools_extension.jpg">
 </p>
 
 Click the *Load unpacked* button and select the directory where you have cloned the MPD repository.
 
 <p align="left">
-  <img src="images/load_unpacked.jpg" width="300">
+  <img src="images/load_unpacked.jpg">
 </p>
 
 Congratulations! You are ready to start using MPD. Try double clicking any word in your browser.
