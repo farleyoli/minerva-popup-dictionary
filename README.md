@@ -6,7 +6,15 @@ Minerva Popup Dictionary (MPD) is an extension for Chrome that lets users search
   <img src="images/usage_example.png">
 </p>
 
-## Instalation
+
+## Features
+Minerva Popup Dictionary:
+- works offline.
+- includes the frequency of each word.
+- includes the IPA transcription of each word based on Standard British English (Received Pronunciation).
+- supports searching within the popup window.
+
+## Installation
 To install MPD, first clone (or download) this repository to any location in your computer. To do this, open your terminal, and type the following.
 
 ```sh
