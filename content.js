@@ -1,6 +1,7 @@
 //TODO: Create connection to anki-connect; get phrase, set parameters and construct
-// TODO: Add math rendering to definitions (require option).
 // TODO: Leave header always shown (when user scrolls) in popup.
+// TODO: Fix /undefined/
+// TODO: Add math rendering to definitions (require option).
 
 
 /**
@@ -195,11 +196,11 @@ function getPopupPosition(popupW, popupH, mouseX, mouseY) {
     //screenW = window.screen.availWidth;
     //screenH = window.screen.availHeight;
     let screenW = window.innerWidth-20;
-    let screenH = window.innerHeight-20;
-    //let offset = 5;
+    let screenH = window.innerHeight-50;
     let offset = 0;
+    let offset_y = 10;
     let retX0 = mouseX + offset;
-    let retY0 = mouseY + offset;
+    let retY0 = mouseY + offset_y;
 
     let retX1 = retX0 + popupW;
     let retY1 = retY0 + popupH;
@@ -208,7 +209,7 @@ function getPopupPosition(popupW, popupH, mouseX, mouseY) {
         retX0 = mouseX - popupW + offset;
     }
     if (retY1 > screenH) {
-        retY0 = mouseY - popupH + offset;
+        retY0 = mouseY - popupH + offset_y;
     }
 
     /*
