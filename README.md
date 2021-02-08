@@ -14,6 +14,9 @@ Minerva Popup Dictionary:
 - includes the IPA transcription of each word based on Standard British English (Received Pronunciation).
 - supports searching within the popup window.
 
+## Dictionary Files
+The dictionary files were obtained from Wiktionary by using [this parser](https://github.com/farleyoli/wiktionary-parser), written by the same author of this repository.
+
 ## Installation
 To install MPD, first clone (or download) this repository to any location in your computer. To do this, open your terminal, and type the following.
 
