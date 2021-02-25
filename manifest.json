@@ -2,7 +2,14 @@
   "name": "Minerva Pop-up Dictionary",
   "version": "1.0",
   "description": "English dictionary to be used with Chrome!",
-  "permissions": ["activeTab", "declarativeContent", "storage"],
+  "permissions": 
+  ["activeTab",
+      "storage",
+      "<all_urls>",
+      "clipboardWrite",
+      "unlimitedStorage",
+      "webRequestBlocking"
+  ],
   "background": {
     "scripts": ["background.js"],
     "persistent": false
@@ -12,7 +19,7 @@
       "matches": [
         "<all_urls>"
       ],
-      "js": ["content.js"],
+      "js": ["content.js", "anki.js"],
       "css": ["popup.css"]
     }
   ],
