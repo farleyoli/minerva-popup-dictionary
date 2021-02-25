@@ -2,13 +2,14 @@
   "name": "Minerva Pop-up Dictionary",
   "version": "1.0",
   "description": "English dictionary to be used with Chrome!",
-  "permissions": 
+  "permissions":
   ["activeTab",
       "storage",
       "<all_urls>",
       "clipboardWrite",
       "unlimitedStorage",
-      "webRequestBlocking"
+      "webRequestBlocking",
+      "http://127.0.0.1:8765"
   ],
   "background": {
     "scripts": ["background.js"],
@@ -24,7 +25,8 @@
     }
   ],
   "web_accessible_resources": [
-      "dictionary/*.json"
+      "dictionary/*.json",
+      "http://127.0.0.1:*"
   ],
   "page_action": {
     "default_popup": "popup.html",
