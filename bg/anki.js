@@ -1,4 +1,3 @@
-// This has to be a background script.
 function invoke(action, version, params={}) {
     return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
@@ -31,9 +30,6 @@ function invoke(action, version, params={}) {
     });
 }
 
-chrome.runtime.onMessage.addListener(
-    async function(request, sender) {
-        const result = await invoke('deckNames', 6);
-        //alert(result);
-    }
-);
+function getDeckNames() {
+    return invoke('deckNames', 6);
+}

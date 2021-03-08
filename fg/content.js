@@ -330,7 +330,7 @@ function doubleClickEventHandler() {
     }
     let dfnDiv = processDefinition(word.toLowerCase(), mouseX, mouseY);
 
-    chrome.runtime.sendMessage({word: word});
+    chrome.runtime.sendMessage({"msgType": "getDeckNames", word: word});
 }
 
 
@@ -367,3 +367,12 @@ function getSelectedPosition() {
 
 document.body.addEventListener("dblclick", doubleClickEventHandler);
 document.body.addEventListener("click", clickEventHandler);
+
+chrome.runtime.onMessage.addListener(
+    async function(request, sender) {
+        if (request.msgType == "getDeckNames") {
+            let deckNames = request.msg;
+            console.log(deckNames);
+        }
+    }
+);
