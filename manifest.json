@@ -5,6 +5,8 @@
   "permissions":
   ["activeTab",
       "storage",
+      "tabs",
+      "contextMenus",
       "<all_urls>",
       "clipboardWrite",
       "unlimitedStorage",

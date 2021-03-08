@@ -329,6 +329,8 @@ function doubleClickEventHandler() {
         openPopup.remove();
     }
     let dfnDiv = processDefinition(word.toLowerCase(), mouseX, mouseY);
+
+    chrome.runtime.sendMessage({word: word});
 }
 
 
