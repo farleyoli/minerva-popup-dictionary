@@ -12,7 +12,7 @@
       "http://127.0.0.1:8765"
   ],
   "background": {
-    "scripts": ["background.js"],
+    "page": "background.html",
     "persistent": false
   },
   "content_scripts": [
@@ -20,7 +20,7 @@
       "matches": [
         "<all_urls>"
       ],
-      "js": ["content.js", "anki.js"],
+      "js": ["content.js"],
       "css": ["popup.css"]
     }
   ],
