@@ -3,7 +3,6 @@ function invoke(action, version, params={}) {
     return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.addEventListener('error', () => {
-            console.log("hmmm");
             reject('failed to issue request')
         });
         xhr.addEventListener('load', () => {
@@ -21,10 +20,8 @@ function invoke(action, version, params={}) {
                 if (response.error) {
                     throw response.error;
                 }
-                console.log("things went well");
                 resolve(response.result);
             } catch (e) {
-                console.log("there was an error");
                 reject(e);
             }
         });
@@ -37,6 +34,6 @@ function invoke(action, version, params={}) {
 chrome.runtime.onMessage.addListener(
     async function(request, sender) {
         const result = await invoke('deckNames', 6);
-        console.log(result);
+        //alert(result);
     }
 );
