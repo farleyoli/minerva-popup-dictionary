@@ -1,4 +1,4 @@
-//TODO: Create connection to anki-connect; get phrase, set parameters and construct
+//TODO: get phrase, set parameters and construct
 // TODO: Leave header always shown (when user scrolls) in popup.
 // TODO: Fix /undefined/
 // TODO: Add math rendering to definitions (require option).
@@ -329,8 +329,6 @@ function doubleClickEventHandler() {
         openPopup.remove();
     }
     let dfnDiv = processDefinition(word.toLowerCase(), mouseX, mouseY);
-
-    chrome.runtime.sendMessage({"msgType": "getDeckNames", word: word});
 }
 
 

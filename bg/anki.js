@@ -1,3 +1,11 @@
+/**
+ * This function interacts with Anki through localhost. Example use:
+ * invoke('createDeck', {deck: 'test1'})
+ * @param {string} Action to be performed in Anki (ex: 'deckNames').
+ * @param {number} Version of Anki-connect.
+ * @param {Object} Parameters to be passed with action.
+ * @return {Object} Promise with the result from action in Anki.
+ */
 function invoke(action, version, params={}) {
     return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
@@ -30,6 +38,9 @@ function invoke(action, version, params={}) {
     });
 }
 
+/**
+ * @return {Object} Promise containing name of all decks in Anki.
+ */
 function getDeckNames() {
     return invoke('deckNames', 6);
 }
