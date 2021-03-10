@@ -28,3 +28,59 @@ function getFirstLetter(word) {
 
     return "other";
 }
+
+/**
+ * This function gets the position of selected text inside inner text of body.
+ * @return {Array<number>} Beginning and ending position of selection.
+ */
+function getSelectedPosition() {
+    let selection = "";
+    if (window.getSelection) {
+        selection = window.getSelection();
+    } else if (document.getSelection) {
+        selection = document.getSelection();
+    } else if (document.selection) {
+        selection = document.selection.createRange();
+    } else {
+        return [];
+    }
+
+    let range = selection.getRangeAt(0);
+    let startOffset = range.startOffset;
+    let endOffset = startOffset + range.toString().length;
+
+    let node = selection.anchorNode;
+
+    let body = document.body;
+    let allText = body.textContent || body.innerText;
+
+    startOffset += allText.indexOf(node.textContent);
+    endOffset += allText.indexOf(node.textContent);
+
+    return [startOffset, endOffset];
+}
+
+function getExamplePhrase(noPhrasesBefore = 1, noPhrasesAfter = 1) {
+    const allText = document.body.textContent || document.body.innerText;
+    const [wordStartPos, wordEndPos] = getSelectedPosition();
+
+    let beg = wordStartPos;
+    for (; beg > 0 && noPhrasesBefore >= 0; beg--) {
+        if (allText[beg] == ".") {
+            noPhrasesBefore--;
+        }
+    }
+    beg += 2
+    while (allText[beg] == " ") {
+        beg++;
+    }
+
+    let end = wordEndPos;
+    for (; end < allText.length && noPhrasesAfter >= 0; end++) {
+        if (allText[end] == ".") {
+            noPhrasesAfter--;
+        }
+    }
+
+    console.log(allText.slice(beg, end));
+}

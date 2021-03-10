@@ -207,6 +207,7 @@ function getPopupPosition(popupW, popupH, mouseX, mouseY) {
  * @param {number} Vertical position of mouse when double click happened.
  */
 function processDefinition(word, mouseX, mouseY) {
+    getExamplePhrase();
     let firstLetter = getFirstLetter(word);
     let dictAdress = './dictionary/' + firstLetter + '.json';
     const url = chrome.runtime.getURL(dictAdress);
@@ -258,35 +259,4 @@ function isInsidePopup(x, y, popup) {
         }
     }
     return false;
-}
-
-/**
- * This function gets the position of selected text inside inner text of body.
- * @return {Array<number>} Beginning and ending position of selection.
- */
-function getSelectedPosition() {
-    let selection = "";
-    if (window.getSelection) {
-        selection = window.getSelection();
-    } else if (document.getSelection) {
-        selection = document.getSelection();
-    } else if (document.selection) {
-        selection = document.selection.createRange();
-    } else {
-        return [];
-    }
-
-    let range = selection.getRangeAt(0);
-    let startOffset = range.startOffset;
-    let endOffset = startOffset + range.toString().length;
-
-    let node = selection.anchorNode;
-
-    let body = document.body;
-    let allText = body.textContent || body.innerText;
-
-    startOffset += allText.indexOf(node.textContent);
-    endOffset += allText.indexOf(node.textContent);
-
-    return [startOffset, endOffset];
 }
