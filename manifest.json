@@ -22,7 +22,12 @@
       "matches": [
         "<all_urls>"
       ],
-      "js": ["fg/content.js"],
+      "js": [
+          "fg/utils.js",
+          "fg/content.js",
+          "fg/anki.js",
+          "fg/listeners.js"
+      ],
       "css": ["fg/popup.css"]
     }
   ],

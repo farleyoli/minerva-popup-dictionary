@@ -1,23 +1,7 @@
-//TODO: get phrase, set parameters and construct
+// TODO: get phrase, set parameters and construct
 // TODO: Leave header always shown (when user scrolls) in popup.
 // TODO: Fix /undefined/
 // TODO: Add math rendering to definitions (require option).
-
-
-/**
- * @param {string} A word.
- * @return {boolean} True iff first letter of word is Capital.
- */
-function isFirstLetterCapital(word) {
-    const letters = "abcdefghijklmnopqrstuvwxyz";
-    if (word.length == 0) {
-        return false;
-    }
-    if (letters.indexOf(word[0]) >= 0) {
-        return true;
-    }
-    return false;
-}
 
 /**
  * This function receives the popup div (with content already inside), 
@@ -115,22 +99,6 @@ function constructDfn(dict, word) {
     }
 
     return retDiv;
-}
-
-/**
- * @param {string} A string.
- * @return {string} First letter of word.
- */
-function getFirstLetter(word) {
-    const letters = "abcdefghijklmnopqrstuvwxyz";
-    if (word.length == 0) {
-        return "other"
-    }
-    if (letters.indexOf(word[0].toLowerCase()) >= 0) {
-        return word[0].toLowerCase();
-    }
-
-    return "other";
 }
 
 /**
@@ -293,46 +261,6 @@ function isInsidePopup(x, y, popup) {
 }
 
 /**
- * This function handles single-clicks from the user. It removes the popup
- * from the DOM if the user clicked outside it.
- */
-function clickEventHandler() {
-    let e = window.event;
-    let mouseX = e.clientX;
-    let mouseY = e.clientY;
-    let openPopup = document.getElementById("minerva-popup");
-    if (openPopup != null) {
-        let isInside = isInsidePopup(mouseX, mouseY, openPopup);
-        if (isInside) {
-            return;
-        }
-        openPopup.remove();
-    }
-}
-
-/**
- * This function handles double-clicks from the user. It adds the definition
- * of the selected word by the user to a popup and adds the popup to the
- * DOM.
- */
-function doubleClickEventHandler() {
-    let e = window.event;
-    let mouseX = e.clientX;
-    let mouseY = e.clientY;
-
-    let pos = getSelectedPosition();
-    let body = document.body;
-    let allText = body.textContent || body.innerText;
-    let word = allText.slice(pos[0], pos[1]); 
-    let openPopup = document.getElementById("minerva-popup");
-    if (openPopup != null) {
-        openPopup.remove();
-    }
-    let dfnDiv = processDefinition(word.toLowerCase(), mouseX, mouseY);
-}
-
-
-/**
  * This function gets the position of selected text inside inner text of body.
  * @return {Array<number>} Beginning and ending position of selection.
  */
@@ -362,15 +290,3 @@ function getSelectedPosition() {
 
     return [startOffset, endOffset];
 }
-
-document.body.addEventListener("dblclick", doubleClickEventHandler);
-document.body.addEventListener("click", clickEventHandler);
-
-chrome.runtime.onMessage.addListener(
-    async function(request, sender) {
-        if (request.msgType == "getDeckNames") {
-            let deckNames = request.msg;
-            console.log(deckNames);
-        }
-    }
-);
