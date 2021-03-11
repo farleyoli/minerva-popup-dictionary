@@ -15,16 +15,21 @@ function sendToTab(tabId, obj) {
  * @param {Object} Information about the tab which sent request.
  */
 async function messageHandler (request, sender) {
-    let retObj = {};
+    var retObj = {};
     switch (request.msgType) {
         case "getDeckNames":
             retObj = await getDeckNames();
             break;
         case "addCard":
-            retObj = await addCard(request.id, request.word, request.phrase, request.dfn).catch(error => alert(error));
-            alert(JSON.stringify(retObj));
+            retObj = await addCard(request.id, request.word, request.phrase, request.dfn).catch( error => {});
             break;
         default:
+            break;
+    }
+    if (typeof retObj === 'number') {
+        retObj = {state: 'success', result: retObj};
+    } else {
+        retObj = {state: "failure"};
     }
     sendToTab(sender.tab.id, {"msgType": request.msgType, "msg": retObj});
 }

@@ -48,7 +48,7 @@ function getDeckNames() {
 function addCard(id, word, phrase, dfn) {
     //deck = 'minerva-popup-dictionary';
     //return invoke('deckNames', 6);
-    return invoke('createDeck', 6, {deck: 'test1'});
+    //return invoke('createDeck', 6, {deck: 'test1'});
     params = {
         "note": {
             "deckName": "Default",
@@ -67,7 +67,7 @@ function addCard(id, word, phrase, dfn) {
             }
         }
     }
-    //let ret =  invoke('addNote', params, 6);
+    let ret =  invoke('addNote', 6, params);
     //alert(JSON.stringify(params));
     return ret;
 }

@@ -8,7 +8,7 @@ async function getDeckNames(request, sender) {
 
 async function getAddCardResult(request, sender) {
     if (request.msgType == "addCard") {
-        if (request.state == "success") {
+        if (typeof request.msg === "object" && 'state' in request.msg && request.msg.state == "success") {
             console.log("Card was added successfully.");
         } else {
             console.log("There was some problem with adding the card.");
