@@ -38,7 +38,19 @@ function doubleClickEventHandler() {
 }
 
 
+function addCard(id, word, phrase, dfn="") {
+    chrome.runtime.sendMessage({
+        msgType: "addCard",
+        id: id,
+        word: word,
+        phrase: phrase,
+        dfn: dfn
+    });
+    chrome.runtime.onMessage.addListener(getAddCardResult);
+}
+
 
 document.body.addEventListener("dblclick", doubleClickEventHandler);
 document.body.addEventListener("click", clickEventHandler);
-chrome.runtime.onMessage.addListener(getDeckNames);
+//chrome.runtime.onMessage.addListener(getDeckNames);
+//chrome.runtime.sendMessage({word: word});

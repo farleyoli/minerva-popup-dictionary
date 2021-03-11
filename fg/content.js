@@ -207,7 +207,8 @@ function getPopupPosition(popupW, popupH, mouseX, mouseY) {
  * @param {number} Vertical position of mouse when double click happened.
  */
 function processDefinition(word, mouseX, mouseY) {
-    getExamplePhrase();
+    let phrase = getExamplePhrase();
+    addCard(word, word, phrase);
     let firstLetter = getFirstLetter(word);
     let dictAdress = './dictionary/' + firstLetter + '.json';
     const url = chrome.runtime.getURL(dictAdress);

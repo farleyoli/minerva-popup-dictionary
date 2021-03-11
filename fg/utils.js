@@ -30,7 +30,7 @@ function getFirstLetter(word) {
 }
 
 /**
- * This function gets the position of selected text inside inner text of body.
+ * This function gets the position of selected word inside inner text of body.
  * @return {Array<number>} Beginning and ending position of selection.
  */
 function getSelectedPosition() {
@@ -60,6 +60,14 @@ function getSelectedPosition() {
     return [startOffset, endOffset];
 }
 
+/**
+ * This function gets the position of selected phrase inside inner text of body.
+ * It can optionally include phrases that come before or after the phrase in which
+ * the original word is found.
+ * @param {Number} Number of phrases before the original phrase to include.
+ * @param {Number} Number of phrases after the original phrase to include.
+ * @return {Array<number>} Beginning and ending position of selection.
+ */
 function getExamplePhrase(noPhrasesBefore = 1, noPhrasesAfter = 1) {
     const allText = document.body.textContent || document.body.innerText;
     const [wordStartPos, wordEndPos] = getSelectedPosition();
@@ -82,5 +90,6 @@ function getExamplePhrase(noPhrasesBefore = 1, noPhrasesAfter = 1) {
         }
     }
 
-    console.log(allText.slice(beg, end));
+    //console.log(allText.slice(beg, end));
+    return allText.slice(beg,end);
 }

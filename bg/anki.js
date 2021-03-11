@@ -44,3 +44,30 @@ function invoke(action, version, params={}) {
 function getDeckNames() {
     return invoke('deckNames', 6);
 }
+
+function addCard(id, word, phrase, dfn) {
+    //deck = 'minerva-popup-dictionary';
+    //return invoke('deckNames', 6);
+    return invoke('createDeck', 6, {deck: 'test1'});
+    params = {
+        "note": {
+            "deckName": "Default",
+            "modelName": "Basic",
+            "fields": {
+                "Front": word,
+                "Back": phrase
+            },
+            "options": {
+                "allowDuplicate": false,
+                "duplicateScope": "deck",
+                "duplicateScopeOptions": {
+                    "deckName": "Default",
+                    "checkChildren": false
+                }
+            }
+        }
+    }
+    //let ret =  invoke('addNote', params, 6);
+    //alert(JSON.stringify(params));
+    return ret;
+}

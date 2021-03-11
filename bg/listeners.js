@@ -20,6 +20,10 @@ async function messageHandler (request, sender) {
         case "getDeckNames":
             retObj = await getDeckNames();
             break;
+        case "addCard":
+            retObj = await addCard(request.id, request.word, request.phrase, request.dfn).catch(error => alert(error));
+            alert(JSON.stringify(retObj));
+            break;
         default:
     }
     sendToTab(sender.tab.id, {"msgType": request.msgType, "msg": retObj});
