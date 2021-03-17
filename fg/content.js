@@ -103,6 +103,7 @@ function constructDfn(dict, word) {
                 dfnNode.addEventListener("click", function() {
                    alert(getDfnStr(dfnNode));
                 });
+                dfnNode.classList.add("minerva-dfn-leaf");
             }
         }
         ret.style.marginLeft = "5%";
