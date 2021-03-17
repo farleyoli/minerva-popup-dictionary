@@ -1,7 +1,29 @@
-// TODO: get phrase, set parameters and construct
 // TODO: Leave header always shown (when user scrolls) in popup.
 // TODO: Fix /undefined/
-// TODO: Add math rendering to definitions (require option).
+// TODO: Add math rendering to definitions (require option from user).
+
+
+/**
+ * This function gets the definition of a subentry of a word in the dictionary.
+ * It produces this definition by climbing up its path in the DOM tree.
+ * See constructDfn function.
+ * @param {Object} Node to be added.
+ * @return {string} Definition to be returned.
+ */
+function getDfnStr(node) {
+    ret = [];
+    count = 0;
+    while (node && node.children && node.children.length >= 2 && count < 10000) {
+        if (node.id == "minerva-dfn-node") {
+            txt = node.children[1].innerText;
+            ret.push(txt);
+        }
+        node = node.parentNode;
+        count++;
+    }
+    ret = ret.reverse().join("<br>")
+    return ret;
+}
 
 /**
  * This function receives the popup div (with content already inside), 
@@ -14,7 +36,6 @@
  * body.
  */
 function constructPopup(x, y, width, height, dfnDiv) {
-    //TODO: use CSS file to set this properties through a class
     dfnDiv.style.left = x.toString() + 'px';
     dfnDiv.style.top = y.toString() + 'px';
     dfnDiv.style.width = width.toString() + 'px';
@@ -59,7 +80,7 @@ function constructDfn(dict, word) {
     function constructDfnAux(dfn) {
         const ret = document.createElement("div");
         if (dfn.length <= 0) {
-            return ret;
+            return null;
         }
         for (let i = 0; i < dfn.length; i++) {
             const dfnNode = document.createElement("div");
@@ -74,7 +95,15 @@ function constructDfn(dict, word) {
             dfnNode.style.marginBottom = "2.5%";
             dfnNode.appendChild(textNode);
             ret.appendChild(dfnNode);
-            ret.appendChild(constructDfnAux(dfn[i]['dfn']));
+            dfnNode.id = "minerva-dfn-node";
+            let child = constructDfnAux(dfn[i]['dfn']);
+            if (child) {
+                dfnNode.appendChild(child);
+            } else {
+                dfnNode.addEventListener("click", function() {
+                   alert(getDfnStr(dfnNode));
+                });
+            }
         }
         ret.style.marginLeft = "5%";
         return ret;
