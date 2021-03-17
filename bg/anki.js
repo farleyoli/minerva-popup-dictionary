@@ -45,6 +45,15 @@ function getDeckNames() {
     return invoke('deckNames', 6);
 }
 
+/**
+ * This function adds a card to Anki through anki-connect.
+ * @param {string} ID of the word dfn to be added (which uniquely identifies it).
+ * There can be many of these for each word.
+ * @param {string} Word to be added.
+ * @param {string} Example phrase to be added.
+ * @param {string} Definition relative to ID to be added. 
+ * @return {Object} Promise containing status of request to add card.
+ */
 function addCard(id, word, phrase, dfn) {
     //deck = 'minerva-popup-dictionary';
     //return invoke('deckNames', 6);

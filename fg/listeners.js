@@ -38,6 +38,14 @@ function doubleClickEventHandler() {
 }
 
 
+/**
+ * This function sends a request to the background script to add a card to anki.
+ * @param {string} ID of the word dfn to be added (which uniquely identifies it).
+ * There can be many of these for each word.
+ * @param {string} Word to be added.
+ * @param {string} Example phrase to be added.
+ * @param {string} Definition relative to ID to be added. 
+ */
 function addCard(id, word, phrase, dfn="") {
     chrome.runtime.sendMessage({
         msgType: "addCard",
