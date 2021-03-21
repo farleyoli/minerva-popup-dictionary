@@ -13,14 +13,13 @@ Minerva Popup Dictionary:
 - includes the frequency of each word.
 - includes the IPA transcription of each word based on Standard British English (Received Pronunciation).
 - supports searching within the popup window.
-- supports automatic creation of cloze cards on Anki
+- supports automatic creation of cloze cards on Anki.
 
 <p align="left">
   <img src="images/anki_wiki_example.jpg">
 </p>
-<p style="float: left">
-  <img src="images/anki1.jpg">
-  <img src="images/anki2.jpg">
+<p align="left">
+  <img src="images/anki.jpg">
 </p>
 
 
