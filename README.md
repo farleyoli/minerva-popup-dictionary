@@ -17,6 +17,8 @@ Minerva Popup Dictionary:
 
 <p align="left">
   <img src="images/anki_wiki_example.jpg">
+</p>
+<p style="float: left">
   <img src="images/anki1.jpg">
   <img src="images/anki2.jpg">
 </p>
