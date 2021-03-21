@@ -72,6 +72,7 @@ function processContent(content) {
  * @return {Object} Div HTML object with definition to be embedded in popup.
  */
 function constructDfn(dict, word) {
+    let phrase = getExamplePhrase(word = word);
     // Use the words "draw", "acid", "head" and "hand" (triple indentation) to test stuff.
     const retDiv = document.createElement("div");
     const header = document.createElement("div");
@@ -101,7 +102,9 @@ function constructDfn(dict, word) {
                 dfnNode.appendChild(child);
             } else {
                 dfnNode.addEventListener("click", function() {
-                   alert(getDfnStr(dfnNode));
+                    let dfnStr = getDfnStr(dfnNode);
+                    addCard(dfnStr, word, phrase, dfnStr);
+                    console.log(dfnStr);
                 });
                 dfnNode.classList.add("minerva-dfn-leaf");
             }

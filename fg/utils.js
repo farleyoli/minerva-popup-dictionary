@@ -68,7 +68,7 @@ function getSelectedPosition() {
  * @param {Number} Number of phrases after the original phrase to include.
  * @return {Array<number>} Beginning and ending position of selection.
  */
-function getExamplePhrase(noPhrasesBefore = 1, noPhrasesAfter = 1) {
+function getExamplePhrase(word = "", noPhrasesBefore = 1, noPhrasesAfter = 1) {
     const allText = document.body.textContent || document.body.innerText;
     const [wordStartPos, wordEndPos] = getSelectedPosition();
 
@@ -91,5 +91,9 @@ function getExamplePhrase(noPhrasesBefore = 1, noPhrasesAfter = 1) {
     }
 
     //console.log(allText.slice(beg, end));
-    return allText.slice(beg,end);
+    let ret = allText.slice(beg,end);
+    if (word.length > 0) {
+        ret = ret.replaceAll(word, "<u>" + word + "</u>");
+    }
+    return ret;
 }

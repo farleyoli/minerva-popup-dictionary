@@ -61,10 +61,12 @@ function addCard(id, word, phrase, dfn) {
     params = {
         "note": {
             "deckName": "Default",
-            "modelName": "Basic",
+            "modelName": "minerva-popup-dictionary",
             "fields": {
-                "Front": word,
-                "Back": phrase
+                "id": id,
+                "word": word,
+                "example-phrase": phrase,
+                "definition": dfn
             },
             "options": {
                 "allowDuplicate": false,
