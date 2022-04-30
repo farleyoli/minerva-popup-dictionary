@@ -260,16 +260,21 @@ function processDefinition(word, mouseX, mouseY) {
 }
 
 function getPopupDimensions() {
-    const initialWidth = 400;
-    const initialHeight = 300;
-    const assumedWidthAvailable = 1366;
-    const assumedHeightAvailable = 768;
-    const widthAvailable = window.visualViewport.width;
-    const heightAvailable = window.visualViewport.height;
-    const widthZoomRate = assumedWidthAvailable / widthAvailable;
-    const heightZoomRate = assumedHeightAvailable / heightAvailable;
-    const zoomRate = Math.max(widthZoomRate, heightZoomRate);
-    return [Math.floor(initialWidth/zoomRate), Math.floor(initialHeight/zoomRate)];
+    const fixedRatio                = false;
+    const initialWidth              = 400;
+    const initialHeight             = 300;
+    const assumedWidthAvailable     = 1366;
+    const assumedHeightAvailable    = 768;
+    const widthAvailable            = window.visualViewport.width;
+    const heightAvailable           = window.visualViewport.height;
+    const widthZoomRate             = assumedWidthAvailable / widthAvailable;
+    const heightZoomRate            = assumedHeightAvailable / heightAvailable;
+    const zoomRate                  = Math.max(widthZoomRate, heightZoomRate);
+    if (fixedRatio) {
+        widthZoomRate   = zoomRate;
+        heightZoomRate  = zoomRate;
+    }
+    return [Math.floor(initialWidth/widthZoomRate), Math.floor(initialHeight/heightZoomRate)];
 }
 
 /**
