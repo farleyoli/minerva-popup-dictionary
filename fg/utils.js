@@ -60,6 +60,15 @@ function getSelectedPosition() {
     return [startOffset, endOffset];
 }
 
+function getMaxZIndex() {
+    return Math.max(
+      ...Array.from(document.querySelectorAll('body *'), el =>
+        parseFloat(window.getComputedStyle(el).zIndex),
+      ).filter(zIndex => !Number.isNaN(zIndex)),
+      0,
+    );
+  }
+
 /**
  * This function gets the position of selected phrase inside inner text of body.
  * It can optionally include phrases that come before or after the phrase in which

@@ -40,6 +40,7 @@ function constructPopup(x, y, width, height, dfnDiv) {
     dfnDiv.style.top = y.toString() + 'px';
     dfnDiv.style.width = width.toString() + 'px';
     dfnDiv.style.height = height.toString() + 'px';
+    dfnDiv.style.zIndex = getMaxZIndex() + 3;
     document.body.appendChild(dfnDiv);
 }
 
@@ -250,23 +251,25 @@ function processDefinition(word, mouseX, mouseY) {
         .then((dict) => { 
             let dfnDiv = constructDfn(dict, word);
             dfnDiv.id = "minerva-popup";
-            pos = getPopupPosition(350, 250, mouseX, mouseY);
+            const [popUpWidth, popUpHeight] = getPopupDimensions();
+            pos = getPopupPosition(popUpWidth, popUpHeight, mouseX, mouseY);
             constructPopup(pos[0], pos[1], pos[2]-pos[0], pos[3]-pos[1], dfnDiv);
             addFrequency(word);
             addPronunciation(word);
         });
 }
 
-/**
- * @return {Array[number]} (width, height) of definition popup if it exists; [0,0] otherwise.
- */
 function getPopupDimensions() {
-    let popup = document.getElementById("minerva-popup");
-    if (popup === null) {
-        return [0,0];
-    }
-    let popupDimensions = popup.getBoundingClientRect();
-    return [popupDimensions['width'], popupDimensions['height']];
+    const initialWidth = 400;
+    const initialHeight = 300;
+    const assumedWidthAvailable = 1366;
+    const assumedHeightAvailable = 768;
+    const widthAvailable = window.visualViewport.width;
+    const heightAvailable = window.visualViewport.height;
+    const widthZoomRate = assumedWidthAvailable / widthAvailable;
+    const heightZoomRate = assumedHeightAvailable / heightAvailable;
+    const zoomRate = Math.max(widthZoomRate, heightZoomRate);
+    return [Math.floor(initialWidth/zoomRate), Math.floor(initialHeight/zoomRate)];
 }
 
 /**
