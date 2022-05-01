@@ -91,7 +91,6 @@ function constructDfn(dict, word) {
             dfnNoNode.innerText = (i+1).toString();
             dfnNode.appendChild(dfnNoNode);
             const textNode = document.createElement("span");
-            //textNode.innerText = (i+1).toString() + " " + processContent(dfn[i]['ctnt']);
             textNode.innerText = processContent(dfn[i]['ctnt']);
             dfnNode.style.marginTop = "2.5%";
             dfnNode.style.marginBottom = "2.5%";
@@ -129,6 +128,11 @@ function constructDfn(dict, word) {
     }
 
     for (let i = 0; i < dict[word].length; i++) {
+        if (i > 0) {
+            let hrElement = document.createElement("hr");
+            hrElement.className = "horizontalLine";
+            retDiv.appendChild(hrElement);
+        }
         retDiv.appendChild(constructDfnAux(dict[word][i]['dfn']));
     }
 
@@ -197,35 +201,21 @@ function addFrequency(word) {
 function getPopupPosition(popupW, popupH, mouseX, mouseY) {
     //screenW = window.screen.availWidth;
     //screenH = window.screen.availHeight;
-    let screenW = window.innerWidth-20;
-    let screenH = window.innerHeight-50;
-    let offset = 0;
-    let offset_y = 10;
+    const screenW = window.innerWidth;
+    const screenH = window.innerHeight;
+    const offset = 15;
     let retX0 = mouseX + offset;
-    let retY0 = mouseY + offset_y;
+    let retY0 = mouseY + offset;
 
     let retX1 = retX0 + popupW;
     let retY1 = retY0 + popupH;
 
     if (retX1 > screenW) {
-        retX0 = mouseX - popupW + offset;
+        retX0 = Math.max(mouseX - popupW - 2*offset); // offset goes in opposite direction
     }
     if (retY1 > screenH) {
-        retY0 = mouseY - popupH + offset_y;
+        retY0 = Math.max(mouseY - popupH - 2*offset, 0);
     }
-
-    /*
-    if (retX1 > screenW) {
-        if (retY1 > screenH) {
-            retX0 = mouseX - popupW + offset;
-            retY0 = mouseY - popupH + offset;
-        } else {
-            retX0 = mouseX - popupW + offset;
-        }
-    } else if (retY1 > screenW) {
-        retY0 = mouseY - popupH + offset;
-    }
-    */
 
     retX1 = retX0 + popupW;
     retY1 = retY0 + popupH;

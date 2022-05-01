@@ -28,6 +28,7 @@
 }
 
 #minerva-popup {
+    all: initial;
     font-family: "Noto Serif";
     color: black;
     line-height: 1.2;
@@ -45,4 +46,15 @@
     overflow-x: hidden;
     overflow-y: auto;
     border-radius: 10px;
+}
+
+.horizontalLine {
+    all: initial;
+    margin-top: 3px;
+    margin-bottom: 3px;
+    border: solid 0.5px brown;
+    background-color: brown;
+    width: 40%;                
+    margin-left: auto;
+    margin-right: auto;
 }
