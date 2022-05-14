@@ -150,6 +150,10 @@ function addPronunciation(word) {
     fetch(url)
         .then((response) => response.json())
         .then((pronMap) => { 
+            if(!(word in pronMap))
+                word = word.trim();
+            if(!(word in pronMap))
+                word = word.toLowerCase();
             let pron = pronMap[word];
             let openPopup = document.getElementById("minerva-popup");
             let header = document.getElementById("minerva-header");
@@ -239,6 +243,10 @@ function processDefinition(word, mouseX, mouseY) {
     fetch(url)
         .then((response) => response.json())
         .then((dict) => { 
+            if(!(word in dict))
+                word = word.trim();
+            if(!(word in dict))
+                word = word.toLowerCase();
             let dfnDiv = constructDfn(dict, word);
             dfnDiv.id = "minerva-popup";
             const [popUpWidth, popUpHeight] = getPopupDimensions();
@@ -251,7 +259,7 @@ function processDefinition(word, mouseX, mouseY) {
 
 function getPopupDimensions() {
     const fixedRatio                = false;
-    const initialWidth              = 400;
+    const initialWidth              = 350;
     const initialHeight             = 300;
     const assumedWidthAvailable     = 1366;
     const assumedHeightAvailable    = 768;

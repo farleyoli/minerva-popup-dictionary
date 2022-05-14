@@ -34,7 +34,7 @@ function doubleClickEventHandler() {
     if (openPopup != null) {
         openPopup.remove();
     }
-    let dfnDiv = processDefinition(word.toLowerCase().trim(), mouseX, mouseY);
+    let dfnDiv = processDefinition(word, mouseX, mouseY);
 }
 
 
