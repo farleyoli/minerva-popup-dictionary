@@ -152,9 +152,11 @@ function addPronunciation(word) {
         .then((pronMap) => { 
             if(!(word in pronMap))
                 word = word.trim();
+            let pron = '';
             if(!(word in pronMap))
-                word = word.toLowerCase();
-            let pron = pronMap[word];
+                pron = pronMap[word.toLowerCase()];
+            else
+                pron = pronMap[word];
             let openPopup = document.getElementById("minerva-popup");
             let header = document.getElementById("minerva-header");
             if (openPopup != null && header != null) {
@@ -167,6 +169,45 @@ function addPronunciation(word) {
                     header.appendChild(pronSpan)
                 }
             }
+        });
+}
+
+const addSuggestions = (word, allowedDiff) => {
+    trieAddress = './dictionary/trie.json';
+    const url = chrome.runtime.getURL(trieAddress);
+    fetch(url)
+        .then((response) => response.json())
+        .then((trie) => { 
+            const stack   = [];
+            const matches = [];
+            const suggestionDiv = document.createElement('div');
+            const search = (trie, remainingHealth, depth = 1) => {
+                if (trie == '_end_' ) {
+                    stackWord = stack.slice(0,-1).join('');
+                    if (Math.abs(stackWord.length - word.length) < allowedDiff) {
+                        matches.push(stackWord);
+                    }
+                    return;
+                }
+                if (depth > word.length || remainingHealth <= 0)
+                    return;
+                nextWordLetter = depth < word.length ? word[depth] : '';
+                for (letter in trie) {
+                    healthDelta = letter != nextWordLetter ? -1 : 0;
+                    stack.push(letter);
+                    search(trie[letter], remainingHealth + healthDelta, depth + 1);
+                    stack.pop();
+                }
+            }
+            for (key in trie) {
+                stack.push(key);
+                search(trie[key], allowedDiff);
+                stack.pop();
+            }
+            suggestionDiv.innerText = matches.filter(w => w != word).join(' ');
+            suggestionDiv.classList.add("minerva-suggestions");
+            dfnDiv = document.getElementById('minerva-popup');
+            dfnDiv.append(suggestionDiv);
         });
 }
 
@@ -252,8 +293,9 @@ function processDefinition(word, mouseX, mouseY) {
             const [popUpWidth, popUpHeight] = getPopupDimensions();
             pos = getPopupPosition(popUpWidth, popUpHeight, mouseX, mouseY);
             constructPopup(pos[0], pos[1], pos[2]-pos[0], pos[3]-pos[1], dfnDiv);
-            addFrequency(word);
             addPronunciation(word);
+            addFrequency(word);
+            addSuggestions(word, 1);
         });
 }
 

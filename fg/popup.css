@@ -10,7 +10,7 @@
 
 
 #minerva-header {
-    font-size: 13px;
+    font-size: 12px;
     display: flex;
     flex-direction: row;
     justify-content: space-around;
@@ -40,7 +40,7 @@
     padding-bottom: 0.75%;
     box-shadow: 1px 1px 8px 8px grey;
     position: fixed;
-    font-size: 13px;
+    font-size: 12px;
     background-color: white;
     overflow: scroll;
     overflow-x: hidden;
@@ -57,4 +57,12 @@
     width: 40%;                
     margin-left: auto;
     margin-right: auto;
+}
+
+.minerva-suggestions {
+    font-size: 11px;
+    color:rgb(87, 87, 87);
+    margin-top: 7px;
+    margin-left: 10%;
+    margin-right: 10%;
 }
