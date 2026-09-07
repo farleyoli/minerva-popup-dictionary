@@ -296,7 +296,58 @@ function processDefinition(word, mouseX, mouseY) {
             addPronunciation(word);
             addFrequency(word);
             addSuggestions(word, 1);
+            addAnkiButton(dict, word);
         });
+}
+
+/**
+ * Flattens the recursive definition structure of a word into a single string
+ * (using the same cleaning as the popup rendering).
+ * @param {Object} dict Dictionary JSON file containing the word.
+ * @param {string} word Word whose full definition text is to be extracted.
+ * @return {string} Concatenated definition contents.
+ */
+function getFullDefinitionText(dict, word) {
+    const parts = [];
+    const collect = (dfn) => {
+        if (!dfn) return;
+        for (const node of dfn) {
+            if (node['ctnt']) {
+                parts.push(processContent(node['ctnt']));
+            }
+            if (node['dfn'] && node['dfn'].length > 0) {
+                collect(node['dfn']);
+            }
+        }
+    };
+    for (const entry of dict[word]) {
+        collect(entry['dfn']);
+    }
+    return parts.join(" ");
+}
+
+/**
+ * Adds an "Add to Anki" button to the popup header, but only if Anki is
+ * reachable through Anki-connect.
+ * @param {Object} dict Dictionary JSON file containing the word.
+ * @param {string} word Word whose definition is to be exported.
+ */
+function addAnkiButton(dict, word) {
+    if (!(word in dict)) return;
+    const phrase = getExamplePhrase(word);
+    checkAnkiAvailability(function(available) {
+        if (!available) return;
+        const header = document.getElementById("minerva-header");
+        if (!header) return;
+        const btn = document.createElement("button");
+        btn.id = "minerva-anki-button";
+        btn.innerText = "Add to Anki";
+        btn.addEventListener("click", function() {
+            const dfn = getFullDefinitionText(dict, word);
+            addCard(word, word, phrase, dfn);
+        });
+        header.appendChild(btn);
+    });
 }
 
 function getPopupDimensions() {

@@ -102,7 +102,7 @@ function getExamplePhrase(word = "", noPhrasesBefore = 1, noPhrasesAfter = 1) {
     //console.log(allText.slice(beg, end));
     let ret = allText.slice(beg,end);
     if (word.length > 0) {
-        ret = ret.replaceAll(word, "<u>" + word + "</u>");
+        ret = ret.replaceAll(word, "{{c1::" + word + "}}");
     }
     return ret;
 }

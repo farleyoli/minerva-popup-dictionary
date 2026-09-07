@@ -23,6 +23,9 @@ async function messageHandler (request, sender) {
         case "addCard":
             retObj = await addCard(request.id, request.word, request.phrase, request.dfn).catch( error => {});
             break;
+        case "checkAnki":
+            retObj = await getAnkiVersion().catch( error => {});
+            break;
         default:
             break;
     }
