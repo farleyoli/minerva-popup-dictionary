@@ -13,13 +13,15 @@ function clickEventHandler() {
             return;
         }
         openPopup.remove();
+        currentExamplePhrase = null;
     }
 }
 
 /**
  * This function handles double-clicks from the user. It adds the definition
  * of the selected word by the user to a popup and adds the popup to the
- * DOM.
+ * DOM. If a popup is already open and the double-click happened inside it,
+ * its contents are replaced with the new word instead of closing and reopening.
  */
 function doubleClickEventHandler() {
     let e = window.event;
@@ -31,10 +33,18 @@ function doubleClickEventHandler() {
     let allText = body.textContent || body.innerText;
     let word = allText.slice(pos[0], pos[1]); 
     let openPopup = document.getElementById("minerva-popup");
-    if (openPopup != null) {
-        openPopup.remove();
+
+    if (openPopup != null && isInsidePopup(mouseX, mouseY, openPopup)) {
+        // Double-click inside the open popup: navigate in place, reusing the
+        // example phrase captured from the original page.
+        processDefinition(word, mouseX, mouseY, true);
+        return;
     }
-    let dfnDiv = processDefinition(word, mouseX, mouseY);
+
+    // New lookup from the page: capture the example phrase before the popup
+    // is added to the DOM.
+    currentExamplePhrase = getExamplePhrase(word);
+    processDefinition(word, mouseX, mouseY, false);
 }
 
 
@@ -44,9 +54,10 @@ function doubleClickEventHandler() {
  * There can be many of these for each word.
  * @param {string} Word to be added.
  * @param {string} Example phrase to be added.
- * @param {string} Definition relative to ID to be added. 
+ * @param {string} Definition relative to ID to be added.
+ * @param {Function} callback Called with a boolean once the result arrives.
  */
-function addCard(id, word, phrase, dfn="") {
+function addCard(id, word, phrase, dfn="", callback) {
     chrome.runtime.sendMessage({
         msgType: "addCard",
         id: id,
@@ -54,7 +65,13 @@ function addCard(id, word, phrase, dfn="") {
         phrase: phrase,
         dfn: dfn
     });
-    chrome.runtime.onMessage.addListener(getAddCardResult);
+    chrome.runtime.onMessage.addListener(function addCardResultHandler(request) {
+        if (request.msgType != "addCard") return;
+        chrome.runtime.onMessage.removeListener(addCardResultHandler);
+        const success = typeof request.msg === "object" &&
+                        request.msg.state === "success";
+        if (callback) callback(success);
+    });
 }
 
 

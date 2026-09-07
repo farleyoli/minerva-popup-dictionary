@@ -26,10 +26,13 @@ async function messageHandler (request, sender) {
         case "checkAnki":
             retObj = await getAnkiVersion().catch( error => {});
             break;
+        case "checkWordExists":
+            retObj = await wordExistsInDeck(request.word).catch( error => {});
+            break;
         default:
             break;
     }
-    if (typeof retObj === 'number') {
+    if (typeof retObj === 'number' || typeof retObj === 'boolean') {
         retObj = {state: 'success', result: retObj};
     } else {
         retObj = {state: "failure"};

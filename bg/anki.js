@@ -223,6 +223,39 @@ async function ensureDefaultDeck() {
 }
 
 /**
+ * Checks whether a card for the given word already exists in the Minerva
+ * deck. This relies on Anki-connect's canAddNote, which uses the same
+ * duplicate detection as addNote (first field = "id").
+ * @param {string} word Word whose existence is to be checked.
+ * @return {Promise<boolean>} True iff a card for the word already exists.
+ */
+async function wordExistsInDeck(word) {
+    await ensureMinervaModel();
+    await ensureDefaultDeck();
+    const canAdd = await invoke('canAddNote', 6, {
+        note: {
+            deckName: "Default",
+            modelName: MINERVA_MODEL_NAME,
+            fields: {
+                "id": word,
+                "word": word,
+                "example-phrase": "",
+                "definition": ""
+            },
+            options: {
+                "allowDuplicate": false,
+                "duplicateScope": "deck",
+                "duplicateScopeOptions": {
+                    "deckName": "Default",
+                    "checkChildren": false
+                }
+            }
+        }
+    });
+    return !canAdd;
+}
+
+/**
  * This function adds a card to Anki through anki-connect.
  * @param {string} ID of the word dfn to be added (which uniquely identifies it).
  * There can be many of these for each word.

@@ -4,28 +4,6 @@
 
 
 /**
- * This function gets the definition of a subentry of a word in the dictionary.
- * It produces this definition by climbing up its path in the DOM tree.
- * See constructDfn function.
- * @param {Object} Node to be added.
- * @return {string} Definition to be returned.
- */
-function getDfnStr(node) {
-    ret = [];
-    count = 0;
-    while (node && node.children && node.children.length >= 2 && count < 10000) {
-        if (node.id == "minerva-dfn-node") {
-            txt = node.children[1].innerText;
-            ret.push(txt);
-        }
-        node = node.parentNode;
-        count++;
-    }
-    ret = ret.reverse().join("<br>")
-    return ret;
-}
-
-/**
  * This function receives the popup div (with content already inside), 
  * adds CSS properties to it and embeds it in the document.
  * @param {number} Horizontal position of upper-left corner of popup.
@@ -73,7 +51,6 @@ function processContent(content) {
  * @return {Object} Div HTML object with definition to be embedded in popup.
  */
 function constructDfn(dict, word) {
-    let phrase = getExamplePhrase(word = word);
     // Use the words "draw", "acid", "head" and "hand" (triple indentation) to test stuff.
     const retDiv = document.createElement("div");
     const header = document.createElement("div");
@@ -100,13 +77,6 @@ function constructDfn(dict, word) {
             let child = constructDfnAux(dfn[i]['dfn']);
             if (child) {
                 dfnNode.appendChild(child);
-            } else {
-                dfnNode.addEventListener("click", function() {
-                    let dfnStr = getDfnStr(dfnNode);
-                    addCard(dfnStr, word, phrase, dfnStr);
-                    console.log(dfnStr);
-                });
-                dfnNode.classList.add("minerva-dfn-leaf");
             }
         }
         ret.style.marginLeft = "5%";
@@ -270,12 +240,15 @@ function getPopupPosition(popupW, popupH, mouseX, mouseY) {
 
 
 /**
- * This function takes a word and adds its popup to the DOM.
+ * This function takes a word and shows its definition popup. If `replace` is
+ * true and a popup is already open, its contents are swapped in place instead
+ * of creating a new popup.
  * @param {string} Word to be searched in dictionary.
  * @param {number} Horizontal position of mouse when double click happened.
  * @param {number} Vertical position of mouse when double click happened.
+ * @param {boolean} Whether to reuse the currently open popup.
  */
-function processDefinition(word, mouseX, mouseY) {
+function processDefinition(word, mouseX, mouseY, replace = false) {
     //let phrase = getExamplePhrase();
     //addCard(word, word, phrase);
     let firstLetter = getFirstLetter(word);
@@ -289,10 +262,19 @@ function processDefinition(word, mouseX, mouseY) {
             if(!(word in dict))
                 word = word.toLowerCase();
             let dfnDiv = constructDfn(dict, word);
-            dfnDiv.id = "minerva-popup";
-            const [popUpWidth, popUpHeight] = getPopupDimensions();
-            pos = getPopupPosition(popUpWidth, popUpHeight, mouseX, mouseY);
-            constructPopup(pos[0], pos[1], pos[2]-pos[0], pos[3]-pos[1], dfnDiv);
+            const openPopup = document.getElementById("minerva-popup");
+            if (replace && openPopup != null) {
+                openPopup.textContent = "";
+                while (dfnDiv.firstChild) {
+                    openPopup.appendChild(dfnDiv.firstChild);
+                }
+                openPopup.scrollTop = 0;
+            } else {
+                dfnDiv.id = "minerva-popup";
+                const [popUpWidth, popUpHeight] = getPopupDimensions();
+                pos = getPopupPosition(popUpWidth, popUpHeight, mouseX, mouseY);
+                constructPopup(pos[0], pos[1], pos[2]-pos[0], pos[3]-pos[1], dfnDiv);
+            }
             addPronunciation(word);
             addFrequency(word);
             addSuggestions(word, 1);
@@ -337,16 +319,21 @@ function addAnkiButton(dict, word) {
     const phrase = getExamplePhrase(word);
     checkAnkiAvailability(function(available) {
         if (!available) return;
-        const header = document.getElementById("minerva-header");
-        if (!header) return;
-        const btn = document.createElement("button");
-        btn.id = "minerva-anki-button";
-        btn.innerText = "Add to Anki";
-        btn.addEventListener("click", function() {
-            const dfn = getFullDefinitionText(dict, word);
-            addCard(word, word, phrase, dfn);
+        checkWordExists(word, function(exists) {
+            if (exists) return;
+            const header = document.getElementById("minerva-header");
+            if (!header) return;
+            const btn = document.createElement("button");
+            btn.id = "minerva-anki-button";
+            btn.innerText = "Add to Anki";
+            btn.addEventListener("click", function() {
+                const dfn = getFullDefinitionText(dict, word);
+                addCard(word, word, phrase, dfn, function(success) {
+                    if (success) btn.remove();
+                });
+            });
+            header.appendChild(btn);
         });
-        header.appendChild(btn);
     });
 }
 

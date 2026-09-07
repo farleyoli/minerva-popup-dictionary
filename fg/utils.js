@@ -1,9 +1,13 @@
+// Example phrase captured from the page when the popup is first opened. It is
+// reused for any subword looked up inside the popup, so the phrase always
+// comes from the original page rather than the popup's own text.
+var currentExamplePhrase = null;
+
 /**
  * @param {string} A word.
  * @return {boolean} True iff first letter of word is Capital.
  */
-function isFirstLetterCapital(word) {
-    const letters = "abcdefghijklmnopqrstuvwxyz";
+function isFirstLetterCapital(word) {    const letters = "abcdefghijklmnopqrstuvwxyz";
     if (word.length == 0) {
         return false;
     }
@@ -78,6 +82,9 @@ function getMaxZIndex() {
  * @return {Array<number>} Beginning and ending position of selection.
  */
 function getExamplePhrase(word = "", noPhrasesBefore = 1, noPhrasesAfter = 1) {
+    if (currentExamplePhrase != null) {
+        return currentExamplePhrase;
+    }
     const allText = document.body.textContent || document.body.innerText;
     const [wordStartPos, wordEndPos] = getSelectedPosition();
 
