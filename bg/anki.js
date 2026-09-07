@@ -46,6 +46,19 @@ function getDeckNames() {
 }
 
 /**
+ * Reads the configured Anki deck name from storage, falling back to
+ * DEFAULT_DECK_NAME when unset.
+ * @return {Promise<string>} The configured deck name.
+ */
+function getDeckName() {
+    return new Promise((resolve) => {
+        chrome.storage.sync.get({deckName: DEFAULT_DECK_NAME}, (items) => {
+            resolve(items.deckName);
+        });
+    });
+}
+
+/**
  * Pings Anki-connect to check whether Anki is available. Returns the
  * Anki-connect API version when reachable, or rejects otherwise.
  * @return {Object} Promise resolving to the Anki-connect version number.
@@ -54,6 +67,7 @@ function getAnkiVersion() {
     return invoke('version', 6);
 }
 
+const DEFAULT_DECK_NAME = "Minerva Extension";
 const MINERVA_MODEL_NAME = "minerva-popup-dictionary";
 const MINERVA_MODEL_FIELDS = ["id", "word", "example-phrase", "definition"];
 const MINERVA_CARD_TEMPLATE = {
@@ -213,17 +227,18 @@ async function ensureMinervaModel() {
 
 /**
  * Ensures the deck notes are added to exists, creating it if necessary.
+ * @param {string} deckName Name of the deck to ensure exists.
  * @return {Object} Promise resolving once the deck is guaranteed to exist.
  */
-async function ensureDefaultDeck() {
+async function ensureDeck(deckName) {
     const decks = await getDeckNames();
-    if (!decks.includes("Default")) {
-        await invoke('createDeck', 6, {deck: "Default"});
+    if (!decks.includes(deckName)) {
+        await invoke('createDeck', 6, {deck: deckName});
     }
 }
 
 /**
- * Checks whether a card for the given word already exists in the Minerva
+ * Checks whether a card for the given word already exists in the configured
  * deck. This relies on Anki-connect's canAddNote, which uses the same
  * duplicate detection as addNote (first field = "id").
  * @param {string} word Word whose existence is to be checked.
@@ -231,10 +246,11 @@ async function ensureDefaultDeck() {
  */
 async function wordExistsInDeck(word) {
     await ensureMinervaModel();
-    await ensureDefaultDeck();
+    const deckName = await getDeckName();
+    await ensureDeck(deckName);
     const canAdd = await invoke('canAddNote', 6, {
         note: {
-            deckName: "Default",
+            deckName: deckName,
             modelName: MINERVA_MODEL_NAME,
             fields: {
                 "id": word,
@@ -246,7 +262,7 @@ async function wordExistsInDeck(word) {
                 "allowDuplicate": false,
                 "duplicateScope": "deck",
                 "duplicateScopeOptions": {
-                    "deckName": "Default",
+                    "deckName": deckName,
                     "checkChildren": false
                 }
             }
@@ -269,10 +285,11 @@ async function addCard(id, word, phrase, dfn) {
     //return invoke('deckNames', 6);
     //return invoke('createDeck', 6, {deck: 'test1'});
     await ensureMinervaModel();
-    await ensureDefaultDeck();
+    const deckName = await getDeckName();
+    await ensureDeck(deckName);
     params = {
         "note": {
-            "deckName": "Default",
+            "deckName": deckName,
             "modelName": MINERVA_MODEL_NAME,
             "fields": {
                 "id": id,
@@ -284,7 +301,7 @@ async function addCard(id, word, phrase, dfn) {
                 "allowDuplicate": false,
                 "duplicateScope": "deck",
                 "duplicateScopeOptions": {
-                    "deckName": "Default",
+                    "deckName": deckName,
                     "checkChildren": false
                 }
             }

@@ -1,15 +1,20 @@
-let page = document.getElementById('buttonDiv');
-const kButtonColors = ['#3aa757', '#e8453c', '#f9bb2d', '#4688f1'];
-function constructOptions(kButtonColors) {
-  for (let item of kButtonColors) {
-    let button = document.createElement('button');
-    button.style.backgroundColor = item;
-    button.addEventListener('click', function() {
-      chrome.storage.sync.set({color: item}, function() {
-        console.log('color is ' + item);
-      })
+const DECK_NAME_KEY = "deckName";
+const DEFAULT_DECK_NAME = "Minerva Extension";
+
+document.addEventListener("DOMContentLoaded", function() {
+    const deckNameInput = document.getElementById("deckName");
+    const saveButton = document.getElementById("save");
+    const status = document.getElementById("status");
+
+    chrome.storage.sync.get({[DECK_NAME_KEY]: DEFAULT_DECK_NAME}, function(items) {
+        deckNameInput.value = items[DECK_NAME_KEY];
     });
-    page.appendChild(button);
-  }
-}
-constructOptions(kButtonColors);
+
+    saveButton.addEventListener("click", function() {
+        const deckName = deckNameInput.value.trim() || DEFAULT_DECK_NAME;
+        chrome.storage.sync.set({[DECK_NAME_KEY]: deckName}, function() {
+            status.textContent = "Saved.";
+            setTimeout(function() { status.textContent = ""; }, 2000);
+        });
+    });
+});

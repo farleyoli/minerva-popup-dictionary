@@ -1,21 +1,51 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
+    <meta charset="utf-8">
+    <title>Minerva Popup Dictionary</title>
     <style>
+      body {
+        font-family: "Segoe UI", Helvetica, Arial, sans-serif;
+        max-width: 480px;
+        margin: 40px auto;
+        padding: 0 24px;
+        color: #2d2a26;
+      }
+      h1 {
+        font-size: 20px;
+      }
+      label {
+        display: block;
+        margin: 16px 0 6px;
+        font-weight: 600;
+      }
+      input[type="text"] {
+        width: 100%;
+        padding: 8px 10px;
+        font-size: 14px;
+        box-sizing: border-box;
+      }
       button {
-        height: 30px;
-        width: 30px;
-        outline: none;
-        margin: 10px;
+        margin-top: 16px;
+        padding: 8px 18px;
+        font-size: 14px;
+        cursor: pointer;
+      }
+      #status {
+        color: #2e7d32;
+        margin-top: 12px;
+        min-height: 1.2em;
       }
     </style>
   </head>
   <body>
-    <div id="buttonDiv">
-    </div>
+    <h1>Minerva Popup Dictionary</h1>
+    <label for="deckName">Anki deck name</label>
+    <input type="text" id="deckName" placeholder="Minerva Extension">
     <div>
-      <p>Choose a different background color! (This is a tentative page based on Google's tutorial)</p>
+      <button id="save">Save</button>
     </div>
+    <div id="status"></div>
+    <script src="options.js"></script>
   </body>
-  <script src="options.js"></script>
 </html>
