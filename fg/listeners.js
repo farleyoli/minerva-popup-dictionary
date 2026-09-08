@@ -32,6 +32,7 @@ function doubleClickEventHandler() {
     let body = document.body;
     let allText = body.textContent || body.innerText;
     let word = allText.slice(pos[0], pos[1]); 
+    let followingText = allText.slice(pos[1]);
     let openPopup = document.getElementById("minerva-popup");
 
     if (openPopup != null && isInsidePopup(mouseX, mouseY, openPopup)) {
@@ -44,7 +45,7 @@ function doubleClickEventHandler() {
     // New lookup from the page: capture the example phrase before the popup
     // is added to the DOM.
     currentExamplePhrase = getExamplePhrase(word);
-    processDefinition(word, mouseX, mouseY, false);
+    processDefinition(word, mouseX, mouseY, false, followingText);
 }
 
 

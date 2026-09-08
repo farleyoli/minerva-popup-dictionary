@@ -142,12 +142,15 @@ function addPronunciation(word) {
         });
 }
 
-const addSuggestions = (word, allowedDiff) => {
+const addSuggestions = (word, allowedDiff, popup) => {
     trieAddress = './dictionary/trie.json';
     const url = chrome.runtime.getURL(trieAddress);
     fetch(url)
         .then((response) => response.json())
         .then((trie) => { 
+            if (!popup.isConnected || popup.dataset.minervaLookup !== word) {
+                return;
+            }
             const stack   = [];
             const matches = [];
             const suggestionDiv = document.createElement('div');
@@ -174,11 +177,99 @@ const addSuggestions = (word, allowedDiff) => {
                 search(trie[key], allowedDiff);
                 stack.pop();
             }
-            suggestionDiv.innerText = matches.filter(w => w != word).join(' ');
+            const suggestions = matches.filter(w => w != word);
+            suggestions.forEach((suggestion, index) => {
+                if (index > 0) {
+                    suggestionDiv.append(' ');
+                }
+                suggestionDiv.append(createLookupSuggestion(suggestion));
+            });
             suggestionDiv.classList.add("minerva-suggestions");
-            dfnDiv = document.getElementById('minerva-popup');
-            dfnDiv.append(suggestionDiv);
+            popup.append(suggestionDiv);
         });
+}
+
+/**
+ * Creates a compact button which replaces the current popup with a lookup for
+ * the suggested word or phrase.
+ * @param {string} suggestion Dictionary headword to look up.
+ * @return {Object} Clickable suggestion element.
+ */
+function createLookupSuggestion(suggestion) {
+    const suggestionLink = document.createElement('button');
+    suggestionLink.classList.add('minerva-lookup-suggestion');
+    suggestionLink.innerText = suggestion;
+    suggestionLink.addEventListener('click', function(event) {
+        event.stopPropagation();
+        processDefinition(suggestion, 0, 0, true);
+    });
+    return suggestionLink;
+}
+
+/**
+ * Adds verified possible verb base forms below the definition. Candidate
+ * generation lives in utils.js; this function checks the candidates against
+ * the bundled dictionary so heuristic guesses are never shown as facts.
+ * @param {string} word Word being looked up.
+ * @param {Object} popup Popup to append the hint to.
+ * @param {string} followingText Text immediately after the selected word.
+ */
+function addBaseFormSuggestions(word, popup, followingText = '') {
+    const candidates = getEnglishBaseFormCandidates(word);
+    const phrasalVerbCandidates = getEnglishPhrasalVerbCandidates(word, followingText);
+    const allCandidates = [...new Set([...candidates, ...phrasalVerbCandidates])];
+    const letters = [...new Set(allCandidates.map(getFirstLetter))]
+        .filter(letter => letter !== 'other');
+
+    if (letters.length === 0) {
+        return;
+    }
+
+    const dictionaryRequests = letters.map(letter => {
+        const url = chrome.runtime.getURL('./dictionary/' + letter + '.json');
+        return fetch(url).then(response => response.json());
+    });
+    const frequencyUrl = chrome.runtime.getURL('./dictionary/freq.json');
+
+    Promise.all([...dictionaryRequests, fetch(frequencyUrl).then(response => response.json())]).then(results => {
+        if (!popup.isConnected || popup.dataset.minervaLookup !== word) {
+            return;
+        }
+        const frequencyMap = results.pop();
+        const dicts = results;
+        const dictionaries = Object.assign({}, ...dicts);
+        // Wiktionary includes historical and regional spellings (for example,
+        // "mak"), which can be mechanically derived but are poor hints for a
+        // reader. freq.json contains the extension's common-word list, so it
+        // filters those false positives after the dictionary check.
+        const verified = candidates.filter(candidate =>
+            candidate in dictionaries && candidate in frequencyMap
+        );
+        const verifiedPhrasalVerbs = phrasalVerbCandidates.filter(candidate => {
+            const base = candidate.split(' ')[0];
+            return candidate in dictionaries && base in frequencyMap;
+        });
+        if (verified.length > 0) {
+            const baseFormDiv = document.createElement('div');
+            baseFormDiv.classList.add('minerva-base-forms');
+            baseFormDiv.append('Possible base form' +
+                (verified.length === 1 ? ': ' : 's: '));
+            verified.forEach((baseForm, index) => {
+                if (index > 0) {
+                    baseFormDiv.append(' ');
+                }
+                baseFormDiv.append(createLookupSuggestion(baseForm));
+            });
+            popup.append(baseFormDiv);
+        }
+        for (const phrase of verifiedPhrasalVerbs) {
+            const phraseDiv = document.createElement('div');
+            phraseDiv.classList.add('minerva-base-forms');
+            phraseDiv.append('Possible phrasal verb: ');
+            phraseDiv.append(createLookupSuggestion(phrase));
+            popup.append(phraseDiv);
+        }
+    });
 }
 
 /**
@@ -248,7 +339,7 @@ function getPopupPosition(popupW, popupH, mouseX, mouseY) {
  * @param {number} Vertical position of mouse when double click happened.
  * @param {boolean} Whether to reuse the currently open popup.
  */
-function processDefinition(word, mouseX, mouseY, replace = false) {
+function processDefinition(word, mouseX, mouseY, replace = false, followingText = '') {
     //let phrase = getExamplePhrase();
     //addCard(word, word, phrase);
     let firstLetter = getFirstLetter(word);
@@ -275,9 +366,12 @@ function processDefinition(word, mouseX, mouseY, replace = false) {
                 pos = getPopupPosition(popUpWidth, popUpHeight, mouseX, mouseY);
                 constructPopup(pos[0], pos[1], pos[2]-pos[0], pos[3]-pos[1], dfnDiv);
             }
+            const popup = document.getElementById('minerva-popup');
+            popup.dataset.minervaLookup = word;
             addPronunciation(word);
             addFrequency(word);
-            addSuggestions(word, 1);
+            addBaseFormSuggestions(word, popup, followingText);
+            addSuggestions(word, 1, popup);
             addAnkiButton(dict, word);
         });
 }

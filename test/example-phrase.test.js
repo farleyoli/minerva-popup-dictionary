@@ -10,6 +10,8 @@ vm.createContext(sandbox);
 vm.runInContext(src, sandbox);
 
 const wrapExamplePhraseInParagraphs = sandbox.wrapExamplePhraseInParagraphs;
+const getEnglishBaseFormCandidates = sandbox.getEnglishBaseFormCandidates;
+const getEnglishPhrasalVerbCandidates = sandbox.getEnglishPhrasalVerbCandidates;
 
 test('clozes the word and wraps each sentence in its own <p>', () => {
     const raw = 'In an intervention that is expected to draw fierce criticism from the US and Israel, the foreign secretary will impose a UK ban on the trade in goods and some services from illegal Israeli settlements.He has also told civil society groups he is determined to reassert support for a two-state solution to the conflict with an appeal for the protection of Palestinian rights and respect for international law.In his statement to MPs, Miliband is expected to use firmer language than his recent predecessors in calling out the humanitarian injustices suffered by Palestinians in Gaza.';
@@ -38,4 +40,54 @@ test('leaves a single sentence as one paragraph', () => {
 test('does not wrap the word when word is empty', () => {
     const raw = 'He is determined to win.';
     assert.strictEqual(wrapExamplePhraseInParagraphs(raw, ''), '<p>He is determined to win.</p>');
+});
+
+test('finds regular English verb base-form candidates', () => {
+    assert.deepStrictEqual([...getEnglishBaseFormCandidates('studies')], ['study']);
+    assert.deepStrictEqual([...getEnglishBaseFormCandidates('ties')], ['tie']);
+    assert.deepStrictEqual([...getEnglishBaseFormCandidates('denied')], ['deny']);
+    assert.deepStrictEqual([...getEnglishBaseFormCandidates('tied')], ['tie']);
+    assert.deepStrictEqual([...getEnglishBaseFormCandidates('lying')], ['lie']);
+    assert.deepStrictEqual([...getEnglishBaseFormCandidates('making')], ['mak', 'make']);
+    assert.deepStrictEqual([...getEnglishBaseFormCandidates('running')], ['runn', 'runne', 'run']);
+    assert.deepStrictEqual([...getEnglishBaseFormCandidates('loved')], ['lov', 'love']);
+    assert.deepStrictEqual([...getEnglishBaseFormCandidates('panicked')], ['panick', 'panicke', 'panic']);
+    assert.deepStrictEqual([...getEnglishBaseFormCandidates('panicking')], ['panick', 'panicke', 'panic']);
+});
+
+test('finds common irregular English verb base forms', () => {
+    assert.deepStrictEqual([...getEnglishBaseFormCandidates('were')], ['be']);
+    assert.deepStrictEqual([...getEnglishBaseFormCandidates('written')], ['write']);
+    assert.deepStrictEqual([...getEnglishBaseFormCandidates('GONE')], ['go']);
+    assert.deepStrictEqual([...getEnglishBaseFormCandidates('swum')], ['swim']);
+    assert.deepStrictEqual([...getEnglishBaseFormCandidates('sang')], ['sing']);
+});
+
+test('does not try to deconjugate non-words or non-English spellings', () => {
+    assert.deepStrictEqual([...getEnglishBaseFormCandidates('')], []);
+    assert.deepStrictEqual([...getEnglishBaseFormCandidates("can't")], []);
+    assert.deepStrictEqual([...getEnglishBaseFormCandidates('42nd')], []);
+});
+
+test('finds adjacent-particle phrasal verb candidates', () => {
+    assert.deepStrictEqual(
+        [...getEnglishPhrasalVerbCandidates('taking', ' off at noon')],
+        ['tak off', 'take off']
+    );
+    assert.deepStrictEqual(
+        [...getEnglishPhrasalVerbCandidates('take', ' up a hobby')],
+        ['take up']
+    );
+    assert.deepStrictEqual(
+        [...getEnglishPhrasalVerbCandidates('looking for', ' a solution')],
+        ['look for', 'looke for']
+    );
+    assert.deepStrictEqual(
+        [...getEnglishPhrasalVerbCandidates('looking forward to', ' a break')],
+        ['look forward to', 'looke forward to']
+    );
+});
+
+test('does not treat ordinary following words as phrasal-verb particles', () => {
+    assert.deepStrictEqual([...getEnglishPhrasalVerbCandidates('taking', ' notes')], []);
 });

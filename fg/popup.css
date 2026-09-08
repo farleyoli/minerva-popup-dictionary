@@ -78,3 +78,21 @@
     margin-left: 10%;
     margin-right: 10%;
 }
+
+.minerva-base-forms {
+    font-size: 11px;
+    color: rgb(87, 87, 87);
+    margin-top: 7px;
+    margin-left: 10%;
+    margin-right: 10%;
+}
+
+.minerva-lookup-suggestion {
+    color: inherit;
+    background: none;
+    border: 0;
+    padding: 0;
+    font: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+}
