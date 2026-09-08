@@ -69,11 +69,14 @@ function getAnkiVersion() {
 
 const DEFAULT_DECK_NAME = "Minerva Extension";
 const MINERVA_MODEL_NAME = "minerva-popup-dictionary";
-const MINERVA_MODEL_FIELDS = ["id", "word", "example-phrase", "definition"];
+const MINERVA_MODEL_FIELDS = [
+    "id", "word", "example-phrase", "definition", "page-title",
+    "date-created", "frequency"
+];
 const MINERVA_CARD_TEMPLATE = {
     Name: "Minerva Card",
-    Front: "{{cloze:example-phrase}}",
-    Back: "{{cloze:example-phrase}}<hr id=\"answer\"><div class=\"definition\">{{definition}}</div>"
+    Front: "{{#page-title}}<div class=\"source\">{{page-title}}{{#date-created}} · {{date-created}}{{/date-created}}</div>{{/page-title}}{{cloze:example-phrase}}",
+    Back: "{{#page-title}}<div class=\"source\">{{page-title}}{{#date-created}} · {{date-created}}{{/date-created}}</div>{{/page-title}}<div class=\"answer-word\">{{word}}</div>{{cloze:example-phrase}}{{#frequency}}<div class=\"frequency\">Freq: {{frequency}}</div>{{/frequency}}<hr id=\"answer\"><div class=\"definition\">{{definition}}</div>"
 };
 const MINERVA_MODEL_CSS = `
 .card {
@@ -114,6 +117,28 @@ hr#answer {
     border-left: 3px solid #d8b49a;
 }
 
+.source, .frequency {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 12px;
+    color: #807a71;
+    line-height: 1.4;
+}
+
+.source {
+    margin-bottom: 18px;
+}
+
+.answer-word {
+    font-size: 30px;
+    font-weight: 700;
+    color: #3f342c;
+    margin-bottom: 14px;
+}
+
+.frequency {
+    margin-top: 18px;
+}
+
 .card p {
     margin: 0 0 0.75em;
 }
@@ -131,6 +156,14 @@ hr#answer {
 .card.nightMode .definition {
     color: #b8b2a9;
     border-left-color: #8a6a4a;
+}
+
+.card.nightMode .source, .card.nightMode .frequency {
+    color: #aaa39a;
+}
+
+.card.nightMode .answer-word {
+    color: #eee8e1;
 }
 
 .card.nightMode hr#answer {
@@ -171,9 +204,8 @@ function getModelStyling(modelName) {
 
 /**
  * Updates the CSS of an existing Minerva model to match the desired styling.
- * It first tries to update in place (non-destructive); if that is unavailable
- * or ineffective, it recreates the model (dropping any existing Minerva notes)
- * so the CSS takes effect. Never throws, so it can't block card creation.
+ * It updates in place when supported. Styling is best-effort: a styling API
+ * failure must never recreate a model or discard existing Minerva notes.
  * @return {Object} Promise resolving once the styling is up to date.
  */
 async function updateMinervaStyling() {
@@ -197,23 +229,15 @@ async function reconcileMinervaStyling() {
     if (currentCss.trim() === MINERVA_MODEL_CSS.trim()) {
         return;
     }
-    let updated = false;
     try {
         await invoke('updateModelStyling', 6, {
-            name: MINERVA_MODEL_NAME,
-            css: MINERVA_MODEL_CSS
+            model: {name: MINERVA_MODEL_NAME, css: MINERVA_MODEL_CSS}
         });
-        const after = await getModelStyling(MINERVA_MODEL_NAME);
-        const afterCss = after && after.css != null ? after.css : "";
-        updated = afterCss.trim() === MINERVA_MODEL_CSS.trim();
     } catch (e) {
-        updated = false;
+        // Styling remains unchanged when Anki-connect cannot update it.
     }
-    if (updated) {
-        return;
-    }
-    await removeMinervaModel();
-    await createMinervaModel();
+    // Leave the existing CSS in place if Anki-connect cannot update it. The
+    // fields and templates—and, crucially, the user's notes—remain intact.
 }
 
 /**
@@ -250,6 +274,40 @@ function isDesiredModel(fields, templates) {
 }
 
 /**
+ * Appends newly introduced Minerva fields and updates the card template in
+ * place. This preserves existing cards, whose new fields remain blank.
+ * @param {Array<string>} fields Existing ordered model fields.
+ * @return {Promise<boolean>} Whether the model was migrated successfully.
+ */
+async function migrateMinervaModel(fields) {
+    const isKnownPrefix = fields.every((field, index) =>
+        MINERVA_MODEL_FIELDS[index] === field
+    );
+    if (!isKnownPrefix || fields.length > MINERVA_MODEL_FIELDS.length) {
+        return false;
+    }
+    try {
+        for (let index = fields.length; index < MINERVA_MODEL_FIELDS.length; index++) {
+            await invoke('modelFieldAdd', 6, {
+                modelName: MINERVA_MODEL_NAME,
+                fieldName: MINERVA_MODEL_FIELDS[index]
+            });
+        }
+        await invoke('updateModelTemplates', 6, {
+            model: {
+                name: MINERVA_MODEL_NAME,
+                templates: {[MINERVA_CARD_TEMPLATE.Name]: MINERVA_CARD_TEMPLATE}
+            }
+        });
+        const updatedFields = await getModelFieldNames(MINERVA_MODEL_NAME);
+        const updatedTemplates = await getModelTemplates(MINERVA_MODEL_NAME);
+        return isDesiredModel(updatedFields, updatedTemplates);
+    } catch (e) {
+        return false;
+    }
+}
+
+/**
  * Removes any notes using the Minerva model and then the (now empty) model
  * itself, so it can be recreated. Anki-connect offers no direct way to delete
  * or convert a model, so removeEmptyNotes is used to drop it once its notes
@@ -266,7 +324,9 @@ async function removeMinervaModel() {
 
 /**
  * Ensures the Minerva note model exists with exactly the desired
- * configuration, creating or recreating it if it is missing or different.
+ * configuration, creating it if missing and migrating known older versions
+ * in place. A model with an unknown schema is left untouched to avoid
+ * deleting user cards.
  * @return {Object} Promise resolving once the model is guaranteed correct.
  */
 async function ensureMinervaModel() {
@@ -278,9 +338,10 @@ async function ensureMinervaModel() {
     const fields = await getModelFieldNames(MINERVA_MODEL_NAME);
     const templates = await getModelTemplates(MINERVA_MODEL_NAME);
     if (!isDesiredModel(fields, templates)) {
-        await removeMinervaModel();
-        await createMinervaModel();
-        return;
+        const migrated = await migrateMinervaModel(fields);
+        if (!migrated) {
+            throw new Error('Existing Minerva model could not be migrated safely.');
+        }
     }
     await updateMinervaStyling();
 }
@@ -316,7 +377,10 @@ async function wordExistsInDeck(word) {
                 "id": word,
                 "word": word,
                 "example-phrase": "",
-                "definition": ""
+                "definition": "",
+                "page-title": "",
+                "date-created": "",
+                "frequency": ""
             },
             options: {
                 "allowDuplicate": false,
@@ -337,10 +401,13 @@ async function wordExistsInDeck(word) {
  * There can be many of these for each word.
  * @param {string} Word to be added.
  * @param {string} Example phrase to be added.
- * @param {string} Definition relative to ID to be added. 
+ * @param {string} Definition relative to ID to be added.
+ * @param {string} pageTitle Title of the source page.
+ * @param {string} dateCreated Date on which the card was created.
+ * @param {string} frequency Word frequency rank.
  * @return {Object} Promise containing status of request to add card.
  */
-async function addCard(id, word, phrase, dfn) {
+async function addCard(id, word, phrase, dfn, pageTitle, dateCreated, frequency) {
     //deck = 'minerva-popup-dictionary';
     //return invoke('deckNames', 6);
     //return invoke('createDeck', 6, {deck: 'test1'});
@@ -355,7 +422,10 @@ async function addCard(id, word, phrase, dfn) {
                 "id": id,
                 "word": word,
                 "example-phrase": phrase,
-                "definition": dfn
+                "definition": dfn,
+                "page-title": pageTitle,
+                "date-created": dateCreated,
+                "frequency": frequency
             },
             "options": {
                 "allowDuplicate": false,

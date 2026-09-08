@@ -295,6 +295,32 @@ function addFrequency(word) {
         });
 }
 
+/**
+ * Gets the displayed frequency rank for storing on an Anki card.
+ * @param {string} word Word whose frequency is requested.
+ * @return {Promise<string>} Frequency rank, or an empty string when absent.
+ */
+function getFrequencyForCard(word) {
+    const url = chrome.runtime.getURL('./dictionary/freq.json');
+    return fetch(url)
+        .then(response => response.json())
+        .then(freqMap => {
+            const normalized = word.trim().toLowerCase();
+            return (freqMap[word] || freqMap[normalized] || '').replace(/\n/g, '');
+        })
+        .catch(() => '');
+}
+
+/**
+ * @return {string} Today's local date in ISO-8601 calendar-date form.
+ */
+function getCardCreationDate() {
+    const date = new Date();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return date.getFullYear() + '-' + month + '-' + day;
+}
+
 /** 
  * In this function, we have to consider the case where the cursor is in the
  * right-lower corner of the screen and the case where it is elsewhere.
@@ -422,8 +448,12 @@ function addAnkiButton(dict, word) {
             btn.innerText = "Add to Anki";
             btn.addEventListener("click", function() {
                 const dfn = getFullDefinitionText(dict, word);
-                addCard(word, word, phrase, dfn, function(success) {
-                    if (success) btn.remove();
+                const pageTitle = document.title.trim();
+                const dateCreated = getCardCreationDate();
+                getFrequencyForCard(word).then(frequency => {
+                    addCard(word, word, phrase, dfn, pageTitle, dateCreated, frequency, function(success) {
+                        if (success) btn.remove();
+                    });
                 });
             });
             header.appendChild(btn);

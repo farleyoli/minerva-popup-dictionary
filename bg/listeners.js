@@ -21,7 +21,10 @@ async function messageHandler (request, sender) {
             retObj = await getDeckNames();
             break;
         case "addCard":
-            retObj = await addCard(request.id, request.word, request.phrase, request.dfn).catch( error => {});
+            retObj = await addCard(
+                request.id, request.word, request.phrase, request.dfn,
+                request.pageTitle, request.dateCreated, request.frequency
+            ).catch( error => {});
             break;
         case "checkAnki":
             retObj = await getAnkiVersion().catch( error => {});
