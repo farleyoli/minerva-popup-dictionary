@@ -74,6 +74,22 @@ function getMaxZIndex() {
   }
 
 /**
+ * Wraps the given raw example text in HTML paragraphs: the word is cloze-
+ * deleted and each sentence becomes its own <p>. Sentence boundaries are a
+ * period followed (optionally by whitespace then) by a capital letter, since
+ * textContent often omits the space between sentences.
+ * @param {string} text Raw example text (sentence(s) from the page).
+ * @param {string} word Word to be cloze-deleted, or "" to skip.
+ * @return {string} HTML string with each sentence wrapped in a <p>.
+ */
+function wrapExamplePhraseInParagraphs(text, word = "") {
+    if (word.length > 0) {
+        text = text.replaceAll(word, "{{c1::" + word + "}}");
+    }
+    return "<p>" + text.replace(/\.\s*(?=[A-Z])/g, ".</p><p>") + "</p>";
+}
+
+/**
  * This function gets the position of selected phrase inside inner text of body.
  * It can optionally include phrases that come before or after the phrase in which
  * the original word is found.
@@ -107,9 +123,5 @@ function getExamplePhrase(word = "", noPhrasesBefore = 1, noPhrasesAfter = 1) {
     }
 
     //console.log(allText.slice(beg, end));
-    let ret = allText.slice(beg,end);
-    if (word.length > 0) {
-        ret = ret.replaceAll(word, "{{c1::" + word + "}}");
-    }
-    return ret;
+    return wrapExamplePhraseInParagraphs(allText.slice(beg,end), word);
 }

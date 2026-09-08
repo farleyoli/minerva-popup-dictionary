@@ -79,7 +79,7 @@ const MINERVA_MODEL_CSS = `
 .card {
     font-family: "Georgia", "Times New Roman", serif;
     font-size: 24px;
-    text-align: center;
+    text-align: left;
     color: #2d2a26;
     background-color: #fdfcfb;
     line-height: 1.75;
@@ -101,8 +101,8 @@ hr#answer {
     border: 0;
     height: 1px;
     background: linear-gradient(to right, transparent, #d9d2c5, transparent);
-    margin: 36px auto;
-    width: 70%;
+    margin: 36px 0;
+    width: 100%;
 }
 
 .definition {
@@ -112,6 +112,10 @@ hr#answer {
     line-height: 1.65;
     padding-left: 12px;
     border-left: 3px solid #d8b49a;
+}
+
+.card p {
+    margin: 0 0 0.75em;
 }
 
 .card.nightMode {
@@ -155,6 +159,61 @@ function getModelFieldNames(modelName) {
  */
 function getModelTemplates(modelName) {
     return invoke('modelTemplates', 6, {modelName: modelName});
+}
+
+/**
+ * @param {string} modelName Name of the model whose styling is to be read.
+ * @return {Object} Promise resolving to {css: string}.
+ */
+function getModelStyling(modelName) {
+    return invoke('modelStyling', 6, {modelName: modelName});
+}
+
+/**
+ * Updates the CSS of an existing Minerva model to match the desired styling.
+ * It first tries to update in place (non-destructive); if that is unavailable
+ * or ineffective, it recreates the model (dropping any existing Minerva notes)
+ * so the CSS takes effect. Never throws, so it can't block card creation.
+ * @return {Object} Promise resolving once the styling is up to date.
+ */
+async function updateMinervaStyling() {
+    try {
+        await reconcileMinervaStyling();
+    } catch (e) {
+        // Styling reconciliation is best-effort; never block card creation.
+    }
+}
+
+async function reconcileMinervaStyling() {
+    let currentCss;
+    try {
+        const styling = await getModelStyling(MINERVA_MODEL_NAME);
+        currentCss = styling && styling.css != null ? styling.css : "";
+    } catch (e) {
+        // modelStyling is unavailable (older Anki-connect). Give up rather than
+        // recreate, since a blind recreation would delete notes on every lookup.
+        return;
+    }
+    if (currentCss.trim() === MINERVA_MODEL_CSS.trim()) {
+        return;
+    }
+    let updated = false;
+    try {
+        await invoke('updateModelStyling', 6, {
+            name: MINERVA_MODEL_NAME,
+            css: MINERVA_MODEL_CSS
+        });
+        const after = await getModelStyling(MINERVA_MODEL_NAME);
+        const afterCss = after && after.css != null ? after.css : "";
+        updated = afterCss.trim() === MINERVA_MODEL_CSS.trim();
+    } catch (e) {
+        updated = false;
+    }
+    if (updated) {
+        return;
+    }
+    await removeMinervaModel();
+    await createMinervaModel();
 }
 
 /**
@@ -218,11 +277,12 @@ async function ensureMinervaModel() {
     }
     const fields = await getModelFieldNames(MINERVA_MODEL_NAME);
     const templates = await getModelTemplates(MINERVA_MODEL_NAME);
-    if (isDesiredModel(fields, templates)) {
+    if (!isDesiredModel(fields, templates)) {
+        await removeMinervaModel();
+        await createMinervaModel();
         return;
     }
-    await removeMinervaModel();
-    await createMinervaModel();
+    await updateMinervaStyling();
 }
 
 /**
