@@ -84,5 +84,6 @@ function addCard(id, word, phrase, dfn="", pageTitle="", dateCreated="", frequen
 
 document.body.addEventListener("dblclick", doubleClickEventHandler);
 document.body.addEventListener("click", clickEventHandler);
+loadExamplePhraseSettings();
 //chrome.runtime.onMessage.addListener(getDeckNames);
 //chrome.runtime.sendMessage({word: word});

@@ -2,6 +2,46 @@
 // reused for any subword looked up inside the popup, so the phrase always
 // comes from the original page rather than the popup's own text.
 var currentExamplePhrase = null;
+const DEFAULT_PHRASES_BEFORE = 1;
+const DEFAULT_PHRASES_AFTER = 1;
+var examplePhrasesBefore = DEFAULT_PHRASES_BEFORE;
+var examplePhrasesAfter = DEFAULT_PHRASES_AFTER;
+
+/**
+ * Converts a configured phrase count to a non-negative integer.
+ * @param {*} value Stored option value.
+ * @param {number} fallback Value used for invalid input.
+ * @return {number} Safe phrase count.
+ */
+function normalizePhraseCount(value, fallback) {
+    const count = Number(value);
+    return value !== '' && Number.isInteger(count) && count >= 0 ? count : fallback;
+}
+
+/**
+ * Loads the configured context size for newly captured Anki example phrases.
+ */
+function loadExamplePhraseSettings() {
+    const defaults = {
+        examplePhrasesBefore: DEFAULT_PHRASES_BEFORE,
+        examplePhrasesAfter: DEFAULT_PHRASES_AFTER
+    };
+    const applySettings = function(items) {
+        examplePhrasesBefore = normalizePhraseCount(
+            items.examplePhrasesBefore, DEFAULT_PHRASES_BEFORE
+        );
+        examplePhrasesAfter = normalizePhraseCount(
+            items.examplePhrasesAfter, DEFAULT_PHRASES_AFTER
+        );
+    };
+    chrome.storage.sync.get(defaults, applySettings);
+    chrome.storage.onChanged.addListener(function(changes, areaName) {
+        if (areaName !== 'sync') return;
+        if (changes.examplePhrasesBefore || changes.examplePhrasesAfter) {
+            chrome.storage.sync.get(defaults, applySettings);
+        }
+    });
+}
 
 /**
  * @param {string} A word.
@@ -253,7 +293,7 @@ function wrapExamplePhraseInParagraphs(text, word = "") {
  * @param {Number} Number of phrases after the original phrase to include.
  * @return {Array<number>} Beginning and ending position of selection.
  */
-function getExamplePhrase(word = "", noPhrasesBefore = 1, noPhrasesAfter = 1) {
+function getExamplePhrase(word = "", noPhrasesBefore = examplePhrasesBefore, noPhrasesAfter = examplePhrasesAfter) {
     if (currentExamplePhrase != null) {
         return currentExamplePhrase;
     }

@@ -19,7 +19,7 @@
         margin: 16px 0 6px;
         font-weight: 600;
       }
-      input[type="text"] {
+      input[type="text"], input[type="number"] {
         width: 100%;
         padding: 8px 10px;
         font-size: 14px;
@@ -42,6 +42,10 @@
     <h1>Minerva Popup Dictionary</h1>
     <label for="deckName">Anki deck name</label>
     <input type="text" id="deckName" placeholder="Minerva Extension">
+    <label for="examplePhrasesBefore">Extra phrases before the selected phrase</label>
+    <input type="number" id="examplePhrasesBefore" min="0" step="1">
+    <label for="examplePhrasesAfter">Extra phrases after the selected phrase</label>
+    <input type="number" id="examplePhrasesAfter" min="0" step="1">
     <div>
       <button id="save">Save</button>
     </div>

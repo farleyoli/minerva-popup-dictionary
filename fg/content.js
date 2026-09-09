@@ -207,6 +207,28 @@ function createLookupSuggestion(suggestion) {
 }
 
 /**
+ * Finds a candidate's spelling as it appears in the dictionary. This matters
+ * for proper nouns, whose only headword may be capitalized (Houthi), while
+ * the deconjugator works with lowercase text (houthi).
+ * @param {Object} dictionary Dictionary entries keyed by headword.
+ * @param {string} candidate Generated lowercase candidate.
+ * @return {string|null} Dictionary headword, or null when absent.
+ */
+function getDictionaryHeadword(dictionary, candidate) {
+    if (candidate in dictionary) {
+        return candidate;
+    }
+    const titleCaseCandidate = candidate.charAt(0).toUpperCase() + candidate.slice(1);
+    if (titleCaseCandidate in dictionary) {
+        return titleCaseCandidate;
+    }
+    const normalizedCandidate = candidate.toLowerCase();
+    return Object.keys(dictionary).find(headword =>
+        headword.toLowerCase() === normalizedCandidate
+    ) || null;
+}
+
+/**
  * Adds verified possible verb base forms below the definition. Candidate
  * generation lives in utils.js; this function checks the candidates against
  * the bundled dictionary so heuristic guesses are never shown as facts.
@@ -242,13 +264,23 @@ function addBaseFormSuggestions(word, popup, followingText = '') {
         // "mak"), which can be mechanically derived but are poor hints for a
         // reader. freq.json contains the extension's common-word list, so it
         // filters those false positives after the dictionary check.
-        const verified = candidates.filter(candidate =>
-            candidate in dictionaries && candidate in frequencyMap
-        );
-        const verifiedPhrasalVerbs = phrasalVerbCandidates.filter(candidate => {
+        const verified = candidates.map(candidate => {
+            const headword = getDictionaryHeadword(dictionaries, candidate);
+            if (!headword) return null;
+            // Proper nouns are often absent from the common-word frequency
+            // list, but a capitalized dictionary headword is still useful.
+            return headword in frequencyMap || headword !== headword.toLowerCase()
+                ? headword
+                : null;
+        }).filter(headword => headword !== null);
+        const verifiedPhrasalVerbs = phrasalVerbCandidates.map(candidate => {
+            const headword = getDictionaryHeadword(dictionaries, candidate);
+            if (!headword) return null;
             const base = candidate.split(' ')[0];
-            return candidate in dictionaries && base in frequencyMap;
-        });
+            return base in frequencyMap || headword !== headword.toLowerCase()
+                ? headword
+                : null;
+        }).filter(headword => headword !== null);
         if (verified.length > 0) {
             const baseFormDiv = document.createElement('div');
             baseFormDiv.classList.add('minerva-base-forms');

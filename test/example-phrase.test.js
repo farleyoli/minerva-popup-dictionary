@@ -12,6 +12,7 @@ vm.runInContext(src, sandbox);
 const wrapExamplePhraseInParagraphs = sandbox.wrapExamplePhraseInParagraphs;
 const getEnglishBaseFormCandidates = sandbox.getEnglishBaseFormCandidates;
 const getEnglishPhrasalVerbCandidates = sandbox.getEnglishPhrasalVerbCandidates;
+const normalizePhraseCount = sandbox.normalizePhraseCount;
 
 test('clozes the word and wraps each sentence in its own <p>', () => {
     const raw = 'In an intervention that is expected to draw fierce criticism from the US and Israel, the foreign secretary will impose a UK ban on the trade in goods and some services from illegal Israeli settlements.He has also told civil society groups he is determined to reassert support for a two-state solution to the conflict with an appeal for the protection of Palestinian rights and respect for international law.In his statement to MPs, Miliband is expected to use firmer language than his recent predecessors in calling out the humanitarian injustices suffered by Palestinians in Gaza.';
@@ -40,6 +41,14 @@ test('leaves a single sentence as one paragraph', () => {
 test('does not wrap the word when word is empty', () => {
     const raw = 'He is determined to win.';
     assert.strictEqual(wrapExamplePhraseInParagraphs(raw, ''), '<p>He is determined to win.</p>');
+});
+
+test('accepts only non-negative whole phrase counts', () => {
+    assert.strictEqual(normalizePhraseCount(0, 1), 0);
+    assert.strictEqual(normalizePhraseCount('3', 1), 3);
+    assert.strictEqual(normalizePhraseCount(-1, 1), 1);
+    assert.strictEqual(normalizePhraseCount('1.5', 1), 1);
+    assert.strictEqual(normalizePhraseCount('', 1), 1);
 });
 
 test('finds regular English verb base-form candidates', () => {
