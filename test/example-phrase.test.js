@@ -151,6 +151,18 @@ test('does not deconjugate short -ion words', () => {
     assert.deepStrictEqual([...getEnglishBaseFormCandidates('union')], []);
 });
 
+test('finds verb base forms for -or agent nouns', () => {
+    assert.deepStrictEqual([...getEnglishBaseFormCandidates('indicator')], ['indicat', 'indicate']);
+    assert.deepStrictEqual([...getEnglishBaseFormCandidates('calculator')], ['calculat', 'calculate']);
+    assert.deepStrictEqual([...getEnglishBaseFormCandidates('editor')], ['edit', 'edite']);
+});
+
+test('finds verb base forms for -er agent nouns', () => {
+    assert.deepStrictEqual([...getEnglishBaseFormCandidates('worker')], ['work', 'worke']);
+    assert.deepStrictEqual([...getEnglishBaseFormCandidates('writer')], ['writ', 'write']);
+    assert.deepStrictEqual([...getEnglishBaseFormCandidates('teacher')], ['teach', 'teache']);
+});
+
 test('finds common irregular English verb base forms', () => {
     assert.deepStrictEqual([...getEnglishBaseFormCandidates('were')], ['be']);
     assert.deepStrictEqual([...getEnglishBaseFormCandidates('written')], ['write']);

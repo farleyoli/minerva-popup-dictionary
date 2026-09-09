@@ -163,6 +163,14 @@ function getEnglishBaseFormCandidates(word) {
         const stem = normalized.slice(0, -3);
         add(stem);                           // action -> act
         add(stem + 'e');                     // promotion -> promote
+    } else if (normalized.endsWith('or') && normalized.length > 3) {
+        const stem = normalized.slice(0, -2);
+        add(stem);                           // actor -> act, editor -> edit
+        add(stem + 'e');                     // indicator -> indicate
+    } else if (normalized.endsWith('er') && normalized.length > 3) {
+        const stem = normalized.slice(0, -2);
+        add(stem);                           // worker -> work
+        add(stem + 'e');                     // writer -> write
     } else if (normalized.endsWith('ies') && normalized.length > 3) {
         const stem = normalized.slice(0, -3);
         // ties/dies/lies retain "ie"; longer forms change y to i before -s.
