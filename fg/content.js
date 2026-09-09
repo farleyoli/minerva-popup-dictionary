@@ -256,7 +256,7 @@ function filterVerifiedPhrasalVerbs(dictionaries, candidates) {
 }
 
 /**
- * Adds verified possible verb base forms below the definition. Candidate
+ * Adds verified possible base forms below the definition. Candidate
  * generation lives in utils.js; this function checks the candidates against
  * the bundled dictionary so heuristic guesses are never shown as facts.
  * @param {string} word Word being looked up.

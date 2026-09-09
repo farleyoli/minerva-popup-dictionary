@@ -127,6 +127,30 @@ test('finds regular English verb base-form candidates', () => {
     assert.deepStrictEqual([...getEnglishBaseFormCandidates('panicking')], ['panick', 'panicke', 'panic']);
 });
 
+test('finds adjective base forms for -ly adverbs', () => {
+    assert.deepStrictEqual([...getEnglishBaseFormCandidates('quickly')], ['quick']);
+    assert.deepStrictEqual([...getEnglishBaseFormCandidates('slowly')], ['slow']);
+    assert.deepStrictEqual([...getEnglishBaseFormCandidates('happily')], ['happy']);
+    assert.deepStrictEqual([...getEnglishBaseFormCandidates('easily')], ['easy']);
+});
+
+test('does not shorten -ly words to tiny stems', () => {
+    assert.deepStrictEqual([...getEnglishBaseFormCandidates('only')], []);
+    assert.deepStrictEqual([...getEnglishBaseFormCandidates('early')], []);
+    assert.deepStrictEqual([...getEnglishBaseFormCandidates('apply')], []);
+});
+
+test('finds verb base forms for -ion nouns', () => {
+    assert.deepStrictEqual([...getEnglishBaseFormCandidates('locomotion')], ['locomot', 'locomote']);
+    assert.deepStrictEqual([...getEnglishBaseFormCandidates('promotion')], ['promot', 'promote']);
+    assert.deepStrictEqual([...getEnglishBaseFormCandidates('action')], ['act', 'acte']);
+});
+
+test('does not deconjugate short -ion words', () => {
+    assert.deepStrictEqual([...getEnglishBaseFormCandidates('lion')], []);
+    assert.deepStrictEqual([...getEnglishBaseFormCandidates('union')], []);
+});
+
 test('finds common irregular English verb base forms', () => {
     assert.deepStrictEqual([...getEnglishBaseFormCandidates('were')], ['be']);
     assert.deepStrictEqual([...getEnglishBaseFormCandidates('written')], ['write']);

@@ -74,9 +74,10 @@ function getFirstLetter(word) {
 }
 
 /**
- * Returns plausible dictionary headwords for an English inflected verb.
- * This is deliberately heuristic: callers should verify each result against
- * the dictionary before presenting it to the user.
+ * Returns plausible dictionary headwords for an English inflected word:
+ * verb inflections, -ly adverbs, and -ion nouns. This is deliberately
+ * heuristic: callers should verify each result against the dictionary
+ * before presenting it to the user.
  * @param {string} word A selected word.
  * @return {Array<string>} Candidate base forms, in preference order.
  */
@@ -151,7 +152,18 @@ function getEnglishBaseFormCandidates(word) {
         }
     };
 
-    if (normalized.endsWith('ies') && normalized.length > 3) {
+    if (normalized.endsWith('ily') && normalized.length > 4) {
+        add(normalized.slice(0, -3) + 'y'); // happily -> happy
+    } else if (normalized.endsWith('ly') && normalized.length > 3) {
+        const stem = normalized.slice(0, -2);
+        if (stem.length >= 4) {
+            add(stem);                       // quickly -> quick
+        }
+    } else if (normalized.endsWith('ion') && normalized.length > 5) {
+        const stem = normalized.slice(0, -3);
+        add(stem);                           // action -> act
+        add(stem + 'e');                     // promotion -> promote
+    } else if (normalized.endsWith('ies') && normalized.length > 3) {
         const stem = normalized.slice(0, -3);
         // ties/dies/lies retain "ie"; longer forms change y to i before -s.
         add(stem.length === 1 ? stem + 'ie' : stem + 'y');
