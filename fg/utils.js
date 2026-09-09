@@ -246,6 +246,9 @@ function getSelectedPosition() {
         return [];
     }
 
+    if (!selection || selection.rangeCount === 0) {
+        return [];
+    }
     const range = selection.getRangeAt(0);
     const beforeSelection = range.cloneRange();
     beforeSelection.selectNodeContents(document.body);
@@ -270,19 +273,121 @@ function getMaxZIndex() {
   }
 
 /**
+ * Escapes characters that would otherwise be parsed as HTML markup when the
+ * text is rendered inside an HTML field (such as an Anki card).
+ * @param {string} text Raw text.
+ * @return {string} HTML-safe text.
+ */
+function escapeHtml(text) {
+    return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+}
+
+/**
+ * Escapes regex metacharacters so a string matches literally in a RegExp.
+ * @param {string} text Raw text.
+ * @return {string} Regex-safe text.
+ */
+function escapeRegExp(text) {
+    return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * Strips HTML tags, leaving only their text content. Used to clean markup
+ * found inside Wiktionary definitions before it is stored on a card.
+ * @param {string} text Text possibly containing HTML markup.
+ * @return {string} Text without tags.
+ */
+function stripHtmlTags(text) {
+    return String(text).replace(/<[^>]*>/g, "");
+}
+
+/**
  * Wraps the given raw example text in HTML paragraphs: the word is cloze-
- * deleted and each sentence becomes its own <p>. Sentence boundaries are a
- * period followed (optionally by whitespace then) by a capital letter, since
- * textContent often omits the space between sentences.
+ * deleted and each sentence becomes its own <p>. Sentence boundaries are
+ * periods, exclamation marks, or question marks followed (optionally by
+ * closing quotes and whitespace then) by a capital letter. This also handles
+ * textContent where adjacent sentences have no intervening space.
+ * The text is HTML-escaped first so characters from the page (like < or &)
+ * cannot be interpreted as markup, and only whole-word occurrences of the
+ * word are cloze-deleted (matching is case-insensitive and keeps the case
+ * found on the page).
  * @param {string} text Raw example text (sentence(s) from the page).
  * @param {string} word Word to be cloze-deleted, or "" to skip.
  * @return {string} HTML string with each sentence wrapped in a <p>.
  */
 function wrapExamplePhraseInParagraphs(text, word = "") {
+    text = escapeHtml(text);
     if (word.length > 0) {
-        text = text.replaceAll(word, "{{c1::" + word + "}}");
+        const pattern = "(?<![A-Za-z])" + escapeRegExp(escapeHtml(word)) + "(?![A-Za-z])";
+        text = text.replace(new RegExp(pattern, "gi"), match => "{{c1::" + match + "}}");
     }
-    return "<p>" + text.replace(/\.\s*(?=[A-Z])/g, ".</p><p>") + "</p>";
+    return "<p>" + text.replace(/([.!?]+["'”’)]*)\s*(?=[A-Z])/g, "$1</p><p>") + "</p>";
+}
+
+/**
+ * Returns true when the punctuation at index ends a sentence in page text.
+ * The check intentionally requires a following capital letter (or text end)
+ * to avoid splitting most abbreviations and decimal numbers.
+ * @param {string} text Page text.
+ * @param {number} index Position of punctuation to inspect.
+ * @return {boolean} Whether the punctuation is a sentence boundary.
+ */
+function isSentenceBoundary(text, index) {
+    if (!/[.!?]/.test(text[index])) {
+        return false;
+    }
+    const before = text.slice(Math.max(0, index - 10), index + 1);
+    if (/\b(?:Mr|Mrs|Ms|Dr|Prof|Sr|Jr|St|vs|etc|e\.g|i\.e)\.$/i.test(before) ||
+        /(?:\b[A-Za-z]\.){2,}$/.test(before)) {
+        return false;
+    }
+    let next = index + 1;
+    while (next < text.length && /[\s"'”’)]/.test(text[next])) {
+        next++;
+    }
+    return next >= text.length || /[A-Z]/.test(text[next]);
+}
+
+/**
+ * Extracts the selected sentence and an exact number of neighboring sentences.
+ * @param {string} text Page text.
+ * @param {number} selectionStart Start offset of the selected word or phrase.
+ * @param {number} selectionEnd End offset of the selected word or phrase.
+ * @param {number} phrasesBefore Number of preceding sentences to include.
+ * @param {number} phrasesAfter Number of following sentences to include.
+ * @return {string} Context text for the Anki example.
+ */
+function getExamplePhraseContext(text, selectionStart, selectionEnd, phrasesBefore, phrasesAfter) {
+    let start = 0;
+    let previousBoundaries = 0;
+    for (let index = selectionStart - 1; index >= 0; index--) {
+        if (isSentenceBoundary(text, index)) {
+            previousBoundaries++;
+            if (previousBoundaries > phrasesBefore) {
+                start = index + 1;
+                break;
+            }
+        }
+    }
+    while (start < text.length && /\s/.test(text[start])) {
+        start++;
+    }
+
+    let end = text.length;
+    let followingBoundaries = 0;
+    for (let index = selectionEnd; index < text.length; index++) {
+        if (isSentenceBoundary(text, index)) {
+            followingBoundaries++;
+            if (followingBoundaries > phrasesAfter) {
+                end = index + 1;
+                break;
+            }
+        }
+    }
+    return text.slice(start, end).trim();
 }
 
 /**
@@ -299,25 +404,12 @@ function getExamplePhrase(word = "", noPhrasesBefore = examplePhrasesBefore, noP
     }
     const allText = document.body.textContent || document.body.innerText;
     const [wordStartPos, wordEndPos] = getSelectedPosition();
-
-    let beg = wordStartPos;
-    for (; beg > 0 && noPhrasesBefore >= 0; beg--) {
-        if (allText[beg] == ".") {
-            noPhrasesBefore--;
-        }
+    if (wordStartPos === undefined || wordEndPos === undefined ||
+        wordEndPos <= wordStartPos) {
+        return wrapExamplePhraseInParagraphs("", word);
     }
-    beg += 2
-    while (allText[beg] == " ") {
-        beg++;
-    }
-
-    let end = wordEndPos;
-    for (; end < allText.length && noPhrasesAfter >= 0; end++) {
-        if (allText[end] == ".") {
-            noPhrasesAfter--;
-        }
-    }
-
-    //console.log(allText.slice(beg, end));
-    return wrapExamplePhraseInParagraphs(allText.slice(beg,end), word);
+    const context = getExamplePhraseContext(
+        allText, wordStartPos, wordEndPos, noPhrasesBefore, noPhrasesAfter
+    );
+    return wrapExamplePhraseInParagraphs(context, word);
 }

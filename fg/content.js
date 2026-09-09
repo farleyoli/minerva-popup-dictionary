@@ -229,6 +229,33 @@ function getDictionaryHeadword(dictionary, candidate) {
 }
 
 /**
+ * Resolves candidate headwords against the dictionary, keeping every
+ * candidate that exists in it. All verified candidates are shown as links,
+ * preserving the candidate order.
+ * @param {Object} dictionaries Dictionary entries keyed by headword.
+ * @param {Array<string>} candidates Candidate headwords to verify.
+ * @return {Array<string>} Verified headwords to offer as suggestions.
+ */
+function filterVerifiedHeadwords(dictionaries, candidates) {
+    return [...new Set(candidates
+        .map(candidate => getDictionaryHeadword(dictionaries, candidate))
+        .filter(headword => headword !== null))];
+}
+
+/**
+ * Same verification as filterVerifiedHeadwords, but for phrasal-verb
+ * candidates. Every phrase that exists in the dictionary is offered.
+ * @param {Object} dictionaries Dictionary entries keyed by headword.
+ * @param {Array<string>} candidates Candidate phrasal verbs to verify.
+ * @return {Array<string>} Verified phrasal verbs to offer as suggestions.
+ */
+function filterVerifiedPhrasalVerbs(dictionaries, candidates) {
+    return [...new Set(candidates
+        .map(candidate => getDictionaryHeadword(dictionaries, candidate))
+        .filter(headword => headword !== null))];
+}
+
+/**
  * Adds verified possible verb base forms below the definition. Candidate
  * generation lives in utils.js; this function checks the candidates against
  * the bundled dictionary so heuristic guesses are never shown as facts.
@@ -251,36 +278,16 @@ function addBaseFormSuggestions(word, popup, followingText = '') {
         const url = chrome.runtime.getURL('./dictionary/' + letter + '.json');
         return fetch(url).then(response => response.json());
     });
-    const frequencyUrl = chrome.runtime.getURL('./dictionary/freq.json');
 
-    Promise.all([...dictionaryRequests, fetch(frequencyUrl).then(response => response.json())]).then(results => {
+    Promise.all(dictionaryRequests).then(dicts => {
         if (!popup.isConnected || popup.dataset.minervaLookup !== word) {
             return;
         }
-        const frequencyMap = results.pop();
-        const dicts = results;
         const dictionaries = Object.assign({}, ...dicts);
-        // Wiktionary includes historical and regional spellings (for example,
-        // "mak"), which can be mechanically derived but are poor hints for a
-        // reader. freq.json contains the extension's common-word list, so it
-        // filters those false positives after the dictionary check.
-        const verified = candidates.map(candidate => {
-            const headword = getDictionaryHeadword(dictionaries, candidate);
-            if (!headword) return null;
-            // Proper nouns are often absent from the common-word frequency
-            // list, but a capitalized dictionary headword is still useful.
-            return headword in frequencyMap || headword !== headword.toLowerCase()
-                ? headword
-                : null;
-        }).filter(headword => headword !== null);
-        const verifiedPhrasalVerbs = phrasalVerbCandidates.map(candidate => {
-            const headword = getDictionaryHeadword(dictionaries, candidate);
-            if (!headword) return null;
-            const base = candidate.split(' ')[0];
-            return base in frequencyMap || headword !== headword.toLowerCase()
-                ? headword
-                : null;
-        }).filter(headword => headword !== null);
+        const verified = filterVerifiedHeadwords(dictionaries, candidates);
+        const verifiedPhrasalVerbs = filterVerifiedPhrasalVerbs(
+            dictionaries, phrasalVerbCandidates
+        );
         if (verified.length > 0) {
             const baseFormDiv = document.createElement('div');
             baseFormDiv.classList.add('minerva-base-forms');
@@ -447,7 +454,7 @@ function getFullDefinitionText(dict, word) {
         if (!dfn) return;
         for (const node of dfn) {
             if (node['ctnt']) {
-                parts.push(processContent(node['ctnt']));
+                parts.push(stripHtmlTags(processContent(node['ctnt'])));
             }
             if (node['dfn'] && node['dfn'].length > 0) {
                 collect(node['dfn']);

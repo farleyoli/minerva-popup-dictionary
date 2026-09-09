@@ -13,6 +13,8 @@ const wrapExamplePhraseInParagraphs = sandbox.wrapExamplePhraseInParagraphs;
 const getEnglishBaseFormCandidates = sandbox.getEnglishBaseFormCandidates;
 const getEnglishPhrasalVerbCandidates = sandbox.getEnglishPhrasalVerbCandidates;
 const normalizePhraseCount = sandbox.normalizePhraseCount;
+const getExamplePhraseContext = sandbox.getExamplePhraseContext;
+const stripHtmlTags = sandbox.stripHtmlTags;
 
 test('clozes the word and wraps each sentence in its own <p>', () => {
     const raw = 'In an intervention that is expected to draw fierce criticism from the US and Israel, the foreign secretary will impose a UK ban on the trade in goods and some services from illegal Israeli settlements.He has also told civil society groups he is determined to reassert support for a two-state solution to the conflict with an appeal for the protection of Palestinian rights and respect for international law.In his statement to MPs, Miliband is expected to use firmer language than his recent predecessors in calling out the humanitarian injustices suffered by Palestinians in Gaza.';
@@ -32,6 +34,36 @@ test('splits on period with no following space (textContent behavior)', () => {
     assert.strictEqual(wrapExamplePhraseInParagraphs(raw, ''), expected);
 });
 
+test('splits on question and exclamation sentence endings', () => {
+    const raw = 'Is this working? Yes! It is.';
+    const expected = '<p>Is this working?</p><p>Yes!</p><p>It is.</p>';
+    assert.strictEqual(wrapExamplePhraseInParagraphs(raw, ''), expected);
+});
+
+test('captures exactly the configured surrounding sentences', () => {
+    const raw = 'First sentence. Second has target! Third sentence? Fourth sentence.';
+    const start = raw.indexOf('target');
+    const end = start + 'target'.length;
+    assert.strictEqual(
+        getExamplePhraseContext(raw, start, end, 0, 0),
+        'Second has target!'
+    );
+    assert.strictEqual(
+        getExamplePhraseContext(raw, start, end, 1, 1),
+        'First sentence. Second has target! Third sentence?'
+    );
+});
+
+test('does not split common abbreviations when selecting context', () => {
+    const raw = 'Dr. Smith found target. Then he left.';
+    const start = raw.indexOf('target');
+    const end = start + 'target'.length;
+    assert.strictEqual(
+        getExamplePhraseContext(raw, start, end, 0, 0),
+        'Dr. Smith found target.'
+    );
+});
+
 test('leaves a single sentence as one paragraph', () => {
     const raw = 'Just one sentence';
     const expected = '<p>Just one sentence</p>';
@@ -41,6 +73,37 @@ test('leaves a single sentence as one paragraph', () => {
 test('does not wrap the word when word is empty', () => {
     const raw = 'He is determined to win.';
     assert.strictEqual(wrapExamplePhraseInParagraphs(raw, ''), '<p>He is determined to win.</p>');
+});
+
+test('escapes HTML-significant characters in the captured text', () => {
+    const raw = 'Use the <b> tag with a & b and 5 > 3 to test.';
+    const expected = '<p>Use the &lt;b&gt; tag with a &amp; b and 5 &gt; 3 to test.</p>';
+    assert.strictEqual(wrapExamplePhraseInParagraphs(raw, ''), expected);
+});
+
+test('escapes the cloze word itself', () => {
+    const raw = 'The operator < means less than.';
+    const expected = '<p>The operator {{c1::&lt;}} means less than.</p>';
+    assert.strictEqual(wrapExamplePhraseInParagraphs(raw, '<'), expected);
+});
+
+test('clozes only whole-word occurrences', () => {
+    const raw = 'He said he would visit the shelter.';
+    const expected = '<p>{{c1::He}} said {{c1::he}} would visit the shelter.</p>';
+    assert.strictEqual(wrapExamplePhraseInParagraphs(raw, 'he'), expected);
+});
+
+test('does not cloze the word inside longer words', () => {
+    const raw = 'The determined woodpecker determined the outcome.';
+    const expected = '<p>The {{c1::determined}} woodpecker {{c1::determined}} the outcome.</p>';
+    assert.strictEqual(wrapExamplePhraseInParagraphs(raw, 'determined'), expected);
+});
+
+test('strips HTML tags from definition markup', () => {
+    assert.strictEqual(
+        stripHtmlTags('An equation involving a function <math>f(x)</math> and integrals.'),
+        'An equation involving a function f(x) and integrals.'
+    );
 });
 
 test('accepts only non-negative whole phrase counts', () => {

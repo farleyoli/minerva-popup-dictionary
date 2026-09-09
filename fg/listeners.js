@@ -29,6 +29,9 @@ function doubleClickEventHandler() {
     let mouseY = e.clientY;
 
     let pos = getSelectedPosition();
+    if (pos.length < 2 || pos[1] <= pos[0]) {
+        return;
+    }
     let body = document.body;
     let allText = body.textContent || body.innerText;
     let word = allText.slice(pos[0], pos[1]); 
