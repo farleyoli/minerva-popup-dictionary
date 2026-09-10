@@ -26,20 +26,26 @@ function loadContentWithDate(date) {
     return sandbox.minervaTestExports;
 }
 
-test('Minerva model includes source metadata and answer-only frequency', () => {
+test('Minerva model includes source metadata, IPA, and answer-side word', () => {
     const {MINERVA_MODEL_FIELDS, MINERVA_CARD_TEMPLATE} = loadBackgroundAnki();
 
     assert.deepStrictEqual([...MINERVA_MODEL_FIELDS], [
         'id', 'word', 'example-phrase', 'definition', 'page-title',
-        'date-created', 'frequency'
+        'date-created', 'frequency', 'ipa'
     ]);
     assert.match(MINERVA_CARD_TEMPLATE.Front, /{{page-title}}/);
     assert.match(MINERVA_CARD_TEMPLATE.Front, /{{date-created}}/);
     assert.doesNotMatch(MINERVA_CARD_TEMPLATE.Front, /{{frequency}}/);
+    assert.doesNotMatch(MINERVA_CARD_TEMPLATE.Front, /{{word}}/);
     assert.match(MINERVA_CARD_TEMPLATE.Back, /{{frequency}}/);
+    assert.match(MINERVA_CARD_TEMPLATE.Back, /{{ipa}}/);
+    assert.ok(
+        MINERVA_CARD_TEMPLATE.Back.indexOf('{{cloze:example-phrase}}') <
+        MINERVA_CARD_TEMPLATE.Back.indexOf('{{word}}')
+    );
     assert.ok(
         MINERVA_CARD_TEMPLATE.Back.indexOf('{{word}}') <
-        MINERVA_CARD_TEMPLATE.Back.indexOf('{{cloze:example-phrase}}')
+        MINERVA_CARD_TEMPLATE.Back.indexOf('{{definition}}')
     );
 });
 

@@ -351,6 +351,22 @@ function getFrequencyForCard(word) {
 }
 
 /**
+ * Gets the IPA transcription for storing on an Anki card.
+ * @param {string} word Word whose IPA is requested.
+ * @return {Promise<string>} IPA transcription, or an empty string when absent.
+ */
+function getIpaForCard(word) {
+    const url = chrome.runtime.getURL('./dictionary/ipa.json');
+    return fetch(url)
+        .then(response => response.json())
+        .then(ipaMap => {
+            const normalized = word.trim().toLowerCase();
+            return ipaMap[word] || ipaMap[word.trim()] || ipaMap[normalized] || '';
+        })
+        .catch(() => '');
+}
+
+/**
  * @return {string} Today's local date in ISO-8601 calendar-date form.
  */
 function getCardCreationDate() {
@@ -442,29 +458,60 @@ function processDefinition(word, mouseX, mouseY, replace = false, followingText 
 }
 
 /**
- * Flattens the recursive definition structure of a word into a single string
- * (using the same cleaning as the popup rendering).
+ * Cleans a single definition node's content for storage on a card, using the
+ * same template/tag stripping as the popup rendering, then escaping any
+ * leftover angle brackets so they cannot be read as markup.
+ * @param {string} content Raw definition content.
+ * @return {string} Cleaned, HTML-safe text.
+ */
+function cleanDefinitionContent(content) {
+    return stripHtmlTags(processContent(content))
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+}
+
+/**
+ * Renders one level of a recursive definition as a numbered HTML list. Each
+ * sense becomes a list item; sub-senses are nested as their own list.
+ * @param {Array} dfn Array of {ctnt, dfn, exs, qts} nodes.
+ * @return {string} HTML ordered list, or "" when there are no senses.
+ */
+function renderDefinitionList(dfn) {
+    if (!dfn || dfn.length === 0) {
+        return "";
+    }
+    const items = [];
+    for (const node of dfn) {
+        let item = "";
+        if (node['ctnt']) {
+            item += cleanDefinitionContent(node['ctnt']);
+        }
+        const sub = renderDefinitionList(node['dfn']);
+        if (sub) {
+            item += sub;
+        }
+        items.push("<li>" + item + "</li>");
+    }
+    return "<ol>" + items.join("") + "</ol>";
+}
+
+/**
+ * Flattens the recursive definition structure of a word into a single HTML
+ * string of numbered, nested senses. Each top-level entry (e.g. a part of
+ * speech) becomes its own list.
  * @param {Object} dict Dictionary JSON file containing the word.
  * @param {string} word Word whose full definition text is to be extracted.
- * @return {string} Concatenated definition contents.
+ * @return {string} HTML definition with one ordered list per entry.
  */
 function getFullDefinitionText(dict, word) {
-    const parts = [];
-    const collect = (dfn) => {
-        if (!dfn) return;
-        for (const node of dfn) {
-            if (node['ctnt']) {
-                parts.push(stripHtmlTags(processContent(node['ctnt'])));
-            }
-            if (node['dfn'] && node['dfn'].length > 0) {
-                collect(node['dfn']);
-            }
-        }
-    };
+    const lists = [];
     for (const entry of dict[word]) {
-        collect(entry['dfn']);
+        const list = renderDefinitionList(entry['dfn']);
+        if (list) {
+            lists.push(list);
+        }
     }
-    return parts.join(" ");
+    return lists.join("");
 }
 
 /**
@@ -489,8 +536,8 @@ function addAnkiButton(dict, word) {
                 const dfn = getFullDefinitionText(dict, word);
                 const pageTitle = document.title.trim();
                 const dateCreated = getCardCreationDate();
-                getFrequencyForCard(word).then(frequency => {
-                    addCard(word, word, phrase, dfn, pageTitle, dateCreated, frequency, function(success) {
+                Promise.all([getFrequencyForCard(word), getIpaForCard(word)]).then(([frequency, ipa]) => {
+                    addCard(word, word, phrase, dfn, pageTitle, dateCreated, frequency, ipa, function(success) {
                         if (success) btn.remove();
                     });
                 });

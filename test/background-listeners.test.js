@@ -50,7 +50,7 @@ test('checkWordExists reports the boolean result as success', async () => {
 test('addCard reports the numeric note id as success', async () => {
     const sent = await run({
         msgType: 'addCard', id: 'id-1', word: 'run', phrase: 'p', dfn: 'd',
-        pageTitle: 'Title', dateCreated: '2026-03-07', frequency: '100'
+        pageTitle: 'Title', dateCreated: '2026-03-07', frequency: '100', ipa: 'rʌn'
     }, { addCard: async () => 123 });
     assert.deepStrictEqual(sent, [[7, { msgType: 'addCard', msg: { state: 'success', result: 123 } }]]);
 });
@@ -58,7 +58,7 @@ test('addCard reports the numeric note id as success', async () => {
 test('addCard reports failure when adding the card throws', async () => {
     const sent = await run({
         msgType: 'addCard', id: 'id-1', word: 'run', phrase: 'p', dfn: 'd',
-        pageTitle: 'Title', dateCreated: '2026-03-07', frequency: '100'
+        pageTitle: 'Title', dateCreated: '2026-03-07', frequency: '100', ipa: 'rʌn'
     }, { addCard: async () => { throw new Error('boom'); } });
     assert.deepStrictEqual(sent, [[7, { msgType: 'addCard', msg: { state: 'failure' } }]]);
 });

@@ -32,7 +32,7 @@ test('processContent leaves plain definitions untouched', () => {
     assert.strictEqual(processContent('regular definition without pipes'), 'regular definition without pipes');
 });
 
-test('getFullDefinitionText flattens recursive definitions and strips tags', () => {
+test('getFullDefinitionText renders numbered, nested senses as HTML', () => {
     const dict = {
         run: [{
             head: ['s'],
@@ -43,17 +43,52 @@ test('getFullDefinitionText flattens recursive definitions and strips tags', () 
             ]
         }]
     };
-    assert.strictEqual(getFullDefinitionText(dict, 'run'), 'A definition x. Sub-definition.');
+    assert.strictEqual(
+        getFullDefinitionText(dict, 'run'),
+        '<ol><li>A definition x.<ol><li>Sub-definition.</li></ol></li></ol>'
+    );
 });
 
-test('getFullDefinitionText cleans markup before joining', () => {
+test('getFullDefinitionText cleans markup before wrapping in a list', () => {
     const dict = {
         run: [{
             head: ['s'],
             dfn: [{ctnt: '{{form of|lang=en}} To move swiftly.', dfn: [], exs: [], qts: []}]
         }]
     };
-    assert.strictEqual(getFullDefinitionText(dict, 'run'), 'form lang=en}} To move swiftly.');
+    assert.strictEqual(
+        getFullDefinitionText(dict, 'run'),
+        '<ol><li>form lang=en}} To move swiftly.</li></ol>'
+    );
+});
+
+test('getFullDefinitionText escapes leftover angle brackets and keeps entities', () => {
+    const dict = {
+        run: [{
+            head: ['s'],
+            dfn: [
+                {ctnt: 'a &mdash; b < c', dfn: [], exs: [], qts: []},
+                {ctnt: 'd > e', dfn: [], exs: [], qts: []}
+            ]
+        }]
+    };
+    assert.strictEqual(
+        getFullDefinitionText(dict, 'run'),
+        '<ol><li>a &mdash; b &lt; c</li><li>d &gt; e</li></ol>'
+    );
+});
+
+test('getFullDefinitionText renders one list per top-level entry', () => {
+    const dict = {
+        run: [
+            {head: ['s'], dfn: [{ctnt: 'First sense.', dfn: [], exs: [], qts: []}]},
+            {head: ['s'], dfn: [{ctnt: 'Second sense.', dfn: [], exs: [], qts: []}]}
+        ]
+    };
+    assert.strictEqual(
+        getFullDefinitionText(dict, 'run'),
+        '<ol><li>First sense.</li></ol><ol><li>Second sense.</li></ol>'
+    );
 });
 
 test('getPopupPosition keeps an on-screen popup offset from the mouse', () => {

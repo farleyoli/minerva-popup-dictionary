@@ -177,7 +177,7 @@ test('migrateMinervaModel appends new fields and updates the template in place',
     const added = calls
         .filter(([action]) => action === 'modelFieldAdd')
         .map(([, params]) => params.fieldName);
-    assert.deepStrictEqual(added, ['page-title', 'date-created', 'frequency']);
+    assert.deepStrictEqual(added, ['page-title', 'date-created', 'frequency', 'ipa']);
     assert.ok(calls.some(([action]) => action === 'updateModelTemplates'));
 });
 
@@ -279,7 +279,7 @@ test('addCard builds the note from the given fields and adds it', async () => {
     };
 
     const result = await sandbox.addCard(
-        'id-1', 'word', 'phrase', 'dfn', 'Title', '2026-03-07', '100'
+        'id-1', 'word', 'phrase', 'dfn', 'Title', '2026-03-07', '100', 'wɜːd'
     );
     assert.strictEqual(result, 123);
     assert.strictEqual(captured.action, 'addNote');
@@ -292,7 +292,8 @@ test('addCard builds the note from the given fields and adds it', async () => {
         definition: 'dfn',
         'page-title': 'Title',
         'date-created': '2026-03-07',
-        frequency: '100'
+        frequency: '100',
+        ipa: 'wɜːd'
     });
     assert.deepStrictEqual(plain(captured.params.note.options), {
         allowDuplicate: false,

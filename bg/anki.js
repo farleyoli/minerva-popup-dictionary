@@ -71,7 +71,7 @@ const DEFAULT_DECK_NAME = "Minerva Extension";
 const MINERVA_MODEL_NAME = "minerva-popup-dictionary";
 const MINERVA_MODEL_FIELDS = [
     "id", "word", "example-phrase", "definition", "page-title",
-    "date-created", "frequency"
+    "date-created", "frequency", "ipa"
 ];
 const MINERVA_CLOZE_SCROLL_SCRIPT = `<script>
 (function () {
@@ -115,7 +115,7 @@ const MINERVA_CLOZE_SCROLL_SCRIPT = `<script>
 const MINERVA_CARD_TEMPLATE = {
     Name: "Minerva Card",
     Front: "{{#page-title}}<div class=\"source\">{{page-title}}{{#date-created}} · {{date-created}}{{/date-created}}</div>{{/page-title}}{{cloze:example-phrase}}" + MINERVA_CLOZE_SCROLL_SCRIPT,
-    Back: "{{#page-title}}<div class=\"source\">{{page-title}}{{#date-created}} · {{date-created}}{{/date-created}}</div>{{/page-title}}<div class=\"answer-word\">{{word}}</div>{{cloze:example-phrase}}{{#frequency}}<div class=\"frequency\">Freq: {{frequency}}</div>{{/frequency}}<hr id=\"answer\"><div class=\"definition\">{{definition}}</div>" + MINERVA_CLOZE_SCROLL_SCRIPT
+    Back: "{{#page-title}}<div class=\"source\">{{page-title}}{{#date-created}} · {{date-created}}{{/date-created}}</div>{{/page-title}}{{cloze:example-phrase}}{{#frequency}}<div class=\"frequency\">Freq: {{frequency}}</div>{{/frequency}}<hr id=\"answer\"><div class=\"answer-word\">{{word}}{{#ipa}} <span class=\"ipa\">/{{ipa}}/</span>{{/ipa}}</div><div class=\"definition\">{{definition}}</div>" + MINERVA_CLOZE_SCROLL_SCRIPT
 };
 const MINERVA_MODEL_CSS = `
 .card {
@@ -156,6 +156,24 @@ hr#answer {
     border-left: 3px solid #d8b49a;
 }
 
+.definition ol {
+    margin: 0;
+    padding-left: 1.6em;
+}
+
+.definition li {
+    margin: 0 0 0.35em;
+    padding-left: 0.2em;
+}
+
+.definition > ol {
+    margin-bottom: 1.2em;
+}
+
+.definition > ol:last-child {
+    margin-bottom: 0;
+}
+
 .source, .frequency {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     font-size: 12px;
@@ -172,6 +190,12 @@ hr#answer {
     font-weight: 700;
     color: #3f342c;
     margin-bottom: 14px;
+}
+
+.ipa {
+    font-size: 20px;
+    font-weight: 400;
+    color: #807a71;
 }
 
 .frequency {
@@ -203,6 +227,10 @@ hr#answer {
 
 .card.nightMode .answer-word {
     color: #eee8e1;
+}
+
+.card.nightMode .ipa {
+    color: #aaa39a;
 }
 
 .card.nightMode hr#answer {
@@ -419,7 +447,8 @@ async function wordExistsInDeck(word) {
                 "definition": "",
                 "page-title": "",
                 "date-created": "",
-                "frequency": ""
+                "frequency": "",
+                "ipa": ""
             },
             options: {
                 "allowDuplicate": false,
@@ -444,9 +473,10 @@ async function wordExistsInDeck(word) {
  * @param {string} pageTitle Title of the source page.
  * @param {string} dateCreated Date on which the card was created.
  * @param {string} frequency Word frequency rank.
+ * @param {string} ipa Word IPA transcription.
  * @return {Object} Promise containing status of request to add card.
  */
-async function addCard(id, word, phrase, dfn, pageTitle, dateCreated, frequency) {
+async function addCard(id, word, phrase, dfn, pageTitle, dateCreated, frequency, ipa) {
     //deck = 'minerva-popup-dictionary';
     //return invoke('deckNames', 6);
     //return invoke('createDeck', 6, {deck: 'test1'});
@@ -464,7 +494,8 @@ async function addCard(id, word, phrase, dfn, pageTitle, dateCreated, frequency)
                 "definition": dfn,
                 "page-title": pageTitle,
                 "date-created": dateCreated,
-                "frequency": frequency
+                "frequency": frequency,
+                "ipa": ipa
             },
             "options": {
                 "allowDuplicate": false,

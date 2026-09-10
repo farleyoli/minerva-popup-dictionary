@@ -23,7 +23,8 @@ async function messageHandler (request, sender) {
         case "addCard":
             retObj = await addCard(
                 request.id, request.word, request.phrase, request.dfn,
-                request.pageTitle, request.dateCreated, request.frequency
+                request.pageTitle, request.dateCreated, request.frequency,
+                request.ipa
             ).catch( error => {});
             break;
         case "checkAnki":

@@ -62,9 +62,10 @@ function doubleClickEventHandler() {
  * @param {string} pageTitle Title of the source page.
  * @param {string} dateCreated Date on which the card was created.
  * @param {string} frequency Word frequency rank.
+ * @param {string} ipa Word IPA transcription.
  * @param {Function} callback Called with a boolean once the result arrives.
  */
-function addCard(id, word, phrase, dfn="", pageTitle="", dateCreated="", frequency="", callback) {
+function addCard(id, word, phrase, dfn="", pageTitle="", dateCreated="", frequency="", ipa="", callback) {
     chrome.runtime.sendMessage({
         msgType: "addCard",
         id: id,
@@ -73,7 +74,8 @@ function addCard(id, word, phrase, dfn="", pageTitle="", dateCreated="", frequen
         dfn: dfn,
         pageTitle: pageTitle,
         dateCreated: dateCreated,
-        frequency: frequency
+        frequency: frequency,
+        ipa: ipa
     });
     chrome.runtime.onMessage.addListener(function addCardResultHandler(request) {
         if (request.msgType != "addCard") return;
