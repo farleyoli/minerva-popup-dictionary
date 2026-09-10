@@ -2,7 +2,7 @@
 // reused for any subword looked up inside the popup, so the phrase always
 // comes from the original page rather than the popup's own text.
 var currentExamplePhrase = null;
-const DEFAULT_PHRASES_BEFORE = 1;
+const DEFAULT_PHRASES_BEFORE = 3;
 const DEFAULT_PHRASES_AFTER = 1;
 var examplePhrasesBefore = DEFAULT_PHRASES_BEFORE;
 var examplePhrasesAfter = DEFAULT_PHRASES_AFTER;

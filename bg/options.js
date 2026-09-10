@@ -2,7 +2,7 @@ const DECK_NAME_KEY = "deckName";
 const DEFAULT_DECK_NAME = "Minerva Extension";
 const EXAMPLE_PHRASES_BEFORE_KEY = "examplePhrasesBefore";
 const EXAMPLE_PHRASES_AFTER_KEY = "examplePhrasesAfter";
-const DEFAULT_EXAMPLE_PHRASES_BEFORE = 1;
+const DEFAULT_EXAMPLE_PHRASES_BEFORE = 3;
 const DEFAULT_EXAMPLE_PHRASES_AFTER = 1;
 
 function normalizePhraseCount(value, fallback) {
