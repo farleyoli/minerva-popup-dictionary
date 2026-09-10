@@ -73,10 +73,49 @@ const MINERVA_MODEL_FIELDS = [
     "id", "word", "example-phrase", "definition", "page-title",
     "date-created", "frequency"
 ];
+const MINERVA_CLOZE_SCROLL_SCRIPT = `<script>
+(function () {
+    function scrollToCloze() {
+        var cloze = document.querySelector(".cloze");
+        if (!cloze) return;
+        var vh = window.innerHeight || document.documentElement.clientHeight || 800;
+        try {
+            cloze.scrollIntoView({ block: "center", inline: "nearest", behavior: "auto" });
+        } catch (e) {
+            try { cloze.scrollIntoView(true); } catch (e2) {}
+        }
+        var rect = cloze.getBoundingClientRect();
+        var current = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+        var y = rect.top + current - vh / 2 + rect.height / 2;
+        if (y < 0) y = 0;
+        try { window.scrollTo(0, y); } catch (e) {}
+        if (document.documentElement) { document.documentElement.scrollTop = y; }
+        if (document.body) { document.body.scrollTop = y; }
+        var node = cloze.parentElement;
+        while (node) {
+            if (node.scrollHeight > node.clientHeight + 1) {
+                var nr = node.getBoundingClientRect();
+                node.scrollTop += rect.top - nr.top - node.clientHeight / 2 + rect.height / 2;
+            }
+            node = node.parentElement;
+        }
+    }
+    var delays = [0, 100, 300, 600];
+    delays.forEach(function (ms) { setTimeout(scrollToCloze, ms); });
+    window.addEventListener("load", function () {
+        delays.forEach(function (ms) { setTimeout(scrollToCloze, ms); });
+    });
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", function () {
+            delays.forEach(function (ms) { setTimeout(scrollToCloze, ms); });
+        });
+    }
+})();
+</script>`;
 const MINERVA_CARD_TEMPLATE = {
     Name: "Minerva Card",
-    Front: "{{#page-title}}<div class=\"source\">{{page-title}}{{#date-created}} · {{date-created}}{{/date-created}}</div>{{/page-title}}{{cloze:example-phrase}}",
-    Back: "{{#page-title}}<div class=\"source\">{{page-title}}{{#date-created}} · {{date-created}}{{/date-created}}</div>{{/page-title}}<div class=\"answer-word\">{{word}}</div>{{cloze:example-phrase}}{{#frequency}}<div class=\"frequency\">Freq: {{frequency}}</div>{{/frequency}}<hr id=\"answer\"><div class=\"definition\">{{definition}}</div>"
+    Front: "{{#page-title}}<div class=\"source\">{{page-title}}{{#date-created}} · {{date-created}}{{/date-created}}</div>{{/page-title}}{{cloze:example-phrase}}" + MINERVA_CLOZE_SCROLL_SCRIPT,
+    Back: "{{#page-title}}<div class=\"source\">{{page-title}}{{#date-created}} · {{date-created}}{{/date-created}}</div>{{/page-title}}<div class=\"answer-word\">{{word}}</div>{{cloze:example-phrase}}{{#frequency}}<div class=\"frequency\">Freq: {{frequency}}</div>{{/frequency}}<hr id=\"answer\"><div class=\"definition\">{{definition}}</div>" + MINERVA_CLOZE_SCROLL_SCRIPT
 };
 const MINERVA_MODEL_CSS = `
 .card {
