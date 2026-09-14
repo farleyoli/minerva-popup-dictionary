@@ -13,6 +13,7 @@ vm.runInContext(contentSrc, sandbox);
 
 const processContent = sandbox.processContent;
 const getFullDefinitionText = sandbox.getFullDefinitionText;
+const getPlainDefinitionText = sandbox.getPlainDefinitionText;
 const getPopupPosition = sandbox.getPopupPosition;
 const isInsidePopup = sandbox.isInsidePopup;
 
@@ -89,6 +90,23 @@ test('getFullDefinitionText renders one list per top-level entry', () => {
         getFullDefinitionText(dict, 'run'),
         '<ol><li>First sense.</li></ol><ol><li>Second sense.</li></ol>'
     );
+});
+
+test('getPlainDefinitionText flattens numbered senses into plain text', () => {
+    assert.strictEqual(
+        getPlainDefinitionText(
+            '<ol><li>First sense.</li><li>Second <em>sense</em>.</li></ol>'
+        ),
+        'First sense. Second sense.'
+    );
+    assert.strictEqual(
+        getPlainDefinitionText('<ol><li>A<ol><li>Nested.</li></ol></li></ol>'),
+        'A Nested.'
+    );
+});
+
+test('getPlainDefinitionText collapses whitespace and trims', () => {
+    assert.strictEqual(getPlainDefinitionText('  <ol>  <li>  spaced  </li> </ol>  '), 'spaced');
 });
 
 test('getPopupPosition keeps an on-screen popup offset from the mouse', () => {

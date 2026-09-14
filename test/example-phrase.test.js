@@ -13,6 +13,7 @@ const wrapExamplePhraseInParagraphs = sandbox.wrapExamplePhraseInParagraphs;
 const getEnglishBaseFormCandidates = sandbox.getEnglishBaseFormCandidates;
 const getEnglishPhrasalVerbCandidates = sandbox.getEnglishPhrasalVerbCandidates;
 const normalizePhraseCount = sandbox.normalizePhraseCount;
+const normalizeCardType = sandbox.normalizeCardType;
 const getExamplePhraseContext = sandbox.getExamplePhraseContext;
 const stripHtmlTags = sandbox.stripHtmlTags;
 
@@ -99,6 +100,23 @@ test('does not cloze the word inside longer words', () => {
     assert.strictEqual(wrapExamplePhraseInParagraphs(raw, 'determined'), expected);
 });
 
+test('marks whole-word occurrences with a custom marker', () => {
+    const raw = 'The determined woodpecker determined the outcome.';
+    const expected = '<p>The <b>determined</b> woodpecker <b>determined</b> the outcome.</p>';
+    assert.strictEqual(
+        wrapExamplePhraseInParagraphs(raw, 'determined', match => '<b>' + match + '</b>'),
+        expected
+    );
+});
+
+test('escapes the text before applying a custom marker', () => {
+    const raw = 'Use the <b> tag to test.';
+    assert.strictEqual(
+        wrapExamplePhraseInParagraphs(raw, 'tag', match => '<b>' + match + '</b>'),
+        '<p>Use the &lt;b&gt; <b>tag</b> to test.</p>'
+    );
+});
+
 test('strips HTML tags from definition markup', () => {
     assert.strictEqual(
         stripHtmlTags('An equation involving a function <math>f(x)</math> and integrals.'),
@@ -112,6 +130,13 @@ test('accepts only non-negative whole phrase counts', () => {
     assert.strictEqual(normalizePhraseCount(-1, 1), 1);
     assert.strictEqual(normalizePhraseCount('1.5', 1), 1);
     assert.strictEqual(normalizePhraseCount('', 1), 1);
+});
+
+test('accepts only known card types', () => {
+    assert.strictEqual(normalizeCardType('deepseek'), 'deepseek');
+    assert.strictEqual(normalizeCardType('page'), 'page');
+    assert.strictEqual(normalizeCardType('bogus'), 'page');
+    assert.strictEqual(normalizeCardType(undefined), 'page');
 });
 
 test('finds regular English verb base-form candidates', () => {

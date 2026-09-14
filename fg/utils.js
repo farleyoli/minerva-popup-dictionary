@@ -2,10 +2,12 @@
 // reused for any subword looked up inside the popup, so the phrase always
 // comes from the original page rather than the popup's own text.
 var currentExamplePhrase = null;
-const DEFAULT_PHRASES_BEFORE = 3;
+const DEFAULT_PHRASES_BEFORE = 2;
 const DEFAULT_PHRASES_AFTER = 1;
+const DEFAULT_CARD_TYPE = "page";
 var examplePhrasesBefore = DEFAULT_PHRASES_BEFORE;
 var examplePhrasesAfter = DEFAULT_PHRASES_AFTER;
+var currentCardType = DEFAULT_CARD_TYPE;
 
 /**
  * Converts a configured phrase count to a non-negative integer.
@@ -19,12 +21,23 @@ function normalizePhraseCount(value, fallback) {
 }
 
 /**
- * Loads the configured context size for newly captured Anki example phrases.
+ * Converts a stored card-type option to a known value.
+ * @param {*} value Stored option value.
+ * @return {string} "deepseek" or the default "page".
+ */
+function normalizeCardType(value) {
+    return value === "deepseek" ? "deepseek" : DEFAULT_CARD_TYPE;
+}
+
+/**
+ * Loads the configured context size for newly captured Anki example phrases
+ * and the configured card type.
  */
 function loadExamplePhraseSettings() {
     const defaults = {
         examplePhrasesBefore: DEFAULT_PHRASES_BEFORE,
-        examplePhrasesAfter: DEFAULT_PHRASES_AFTER
+        examplePhrasesAfter: DEFAULT_PHRASES_AFTER,
+        cardType: DEFAULT_CARD_TYPE
     };
     const applySettings = function(items) {
         examplePhrasesBefore = normalizePhraseCount(
@@ -33,11 +46,13 @@ function loadExamplePhraseSettings() {
         examplePhrasesAfter = normalizePhraseCount(
             items.examplePhrasesAfter, DEFAULT_PHRASES_AFTER
         );
+        currentCardType = normalizeCardType(items.cardType);
     };
     chrome.storage.sync.get(defaults, applySettings);
     chrome.storage.onChanged.addListener(function(changes, areaName) {
         if (areaName !== 'sync') return;
-        if (changes.examplePhrasesBefore || changes.examplePhrasesAfter) {
+        if (changes.examplePhrasesBefore || changes.examplePhrasesAfter ||
+            changes.cardType) {
             chrome.storage.sync.get(defaults, applySettings);
         }
     });
@@ -325,24 +340,27 @@ function stripHtmlTags(text) {
 }
 
 /**
- * Wraps the given raw example text in HTML paragraphs: the word is cloze-
- * deleted and each sentence becomes its own <p>. Sentence boundaries are
- * periods, exclamation marks, or question marks followed (optionally by
- * closing quotes and whitespace then) by a capital letter. This also handles
- * textContent where adjacent sentences have no intervening space.
+ * Wraps the given raw example text in HTML paragraphs: the word is marked
+ * and each sentence becomes its own <p>. Sentence boundaries are periods,
+ * exclamation marks, or question marks followed (optionally by closing quotes
+ * and whitespace then) by a capital letter. This also handles textContent
+ * where adjacent sentences have no intervening space.
  * The text is HTML-escaped first so characters from the page (like < or &)
  * cannot be interpreted as markup, and only whole-word occurrences of the
- * word are cloze-deleted (matching is case-insensitive and keeps the case
- * found on the page).
+ * word are marked (matching is case-insensitive and keeps the case found on
+ * the page).
  * @param {string} text Raw example text (sentence(s) from the page).
- * @param {string} word Word to be cloze-deleted, or "" to skip.
+ * @param {string} word Word to be marked, or "" to skip.
+ * @param {Function} markMatch Builds the replacement for each match; defaults
+ * to cloze deletion.
  * @return {string} HTML string with each sentence wrapped in a <p>.
  */
-function wrapExamplePhraseInParagraphs(text, word = "") {
+function wrapExamplePhraseInParagraphs(text, word = "", markMatch = null) {
     text = escapeHtml(text);
     if (word.length > 0) {
         const pattern = "(?<![A-Za-z])" + escapeRegExp(escapeHtml(word)) + "(?![A-Za-z])";
-        text = text.replace(new RegExp(pattern, "gi"), match => "{{c1::" + match + "}}");
+        const mark = markMatch || (match => "{{c1::" + match + "}}");
+        text = text.replace(new RegExp(pattern, "gi"), mark);
     }
     return "<p>" + text.replace(/([.!?]+["'”’)]*)\s*(?=[A-Z])/g, "$1</p><p>") + "</p>";
 }
@@ -411,14 +429,15 @@ function getExamplePhraseContext(text, selectionStart, selectionEnd, phrasesBefo
 }
 
 /**
- * This function gets the position of selected phrase inside inner text of body.
- * It can optionally include phrases that come before or after the phrase in which
- * the original word is found.
+ * Gets the raw example text captured for the selected word, optionally
+ * including phrases that come before or after the phrase in which the
+ * original word is found. The text is reused when the popup navigates to a
+ * subword, so it always comes from the original page.
  * @param {Number} Number of phrases before the original phrase to include.
  * @param {Number} Number of phrases after the original phrase to include.
- * @return {Array<number>} Beginning and ending position of selection.
+ * @return {string} Raw example text without HTML or cloze markup.
  */
-function getExamplePhrase(word = "", noPhrasesBefore = examplePhrasesBefore, noPhrasesAfter = examplePhrasesAfter) {
+function getExamplePhraseText(noPhrasesBefore = examplePhrasesBefore, noPhrasesAfter = examplePhrasesAfter) {
     if (currentExamplePhrase != null) {
         return currentExamplePhrase;
     }
@@ -426,10 +445,23 @@ function getExamplePhrase(word = "", noPhrasesBefore = examplePhrasesBefore, noP
     const [wordStartPos, wordEndPos] = getSelectedPosition();
     if (wordStartPos === undefined || wordEndPos === undefined ||
         wordEndPos <= wordStartPos) {
-        return wrapExamplePhraseInParagraphs("", word);
+        return "";
     }
-    const context = getExamplePhraseContext(
+    return getExamplePhraseContext(
         allText, wordStartPos, wordEndPos, noPhrasesBefore, noPhrasesAfter
     );
-    return wrapExamplePhraseInParagraphs(context, word);
+}
+
+/**
+ * Gets the example phrase for the selected word as HTML paragraphs with the
+ * word cloze-deleted.
+ * @param {string} word Word to cloze-delete.
+ * @param {Number} noPhrasesBefore Number of phrases before the original phrase.
+ * @param {Number} noPhrasesAfter Number of phrases after the original phrase.
+ * @return {string} HTML example phrase.
+ */
+function getExamplePhrase(word = "", noPhrasesBefore = examplePhrasesBefore, noPhrasesAfter = examplePhrasesAfter) {
+    return wrapExamplePhraseInParagraphs(
+        getExamplePhraseText(noPhrasesBefore, noPhrasesAfter), word
+    );
 }

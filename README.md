@@ -14,6 +14,7 @@ Minerva Popup Dictionary:
 - includes the IPA transcription of each word based on Standard British English (Received Pronunciation).
 - supports searching within the popup window.
 - supports automatic creation of cloze cards on Anki.
+- can generate easier, textbook-style example phrases with the DeepSeek API (optional).
 
 <p align="left">
   <img src="images/anki_wiki_example.jpg">
@@ -46,6 +47,16 @@ After enabling developer mode, click the `Load unpacked` button and select the d
 </p>
 
 Congratulations! You are ready to start using MPD. Try double clicking any word in your browser.
+
+## DeepSeek-generated example phrases (optional)
+By default, cards use the phrase captured from the page. To study with an easier, textbook-style passage instead:
+
+1. Open the extension options (right-click the extension → `Options`).
+2. Set `Card type` to `DeepSeek AI phrase`.
+3. Paste a [DeepSeek API key](https://platform.deepseek.com/) into the `DeepSeek API key` field and save.
+4. Optionally adjust `Daily DeepSeek token limit` (default `30000`, roughly 50 phrases; set to `0` for no limit).
+
+The key is stored locally in your browser and is only used by the extension's background page. When you click `Add to Anki (AI)`, the passage is generated from the word's definition; the original page phrase is kept at the bottom of the card answer. If generation fails or the daily token limit is reached, the page phrase is used instead.
 
 ## License
 All the code in this repository (**excluding** the Wiktionary files) falls under the MIT license. The original texts of Wiktionary entries are dual-licensed to the public under both the Creative Commons Attribution-ShareAlike 3.0 Unported License (CC-BY-SA) and the GNU Free Documentation License (GFDL).

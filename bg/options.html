@@ -19,11 +19,16 @@
         margin: 16px 0 6px;
         font-weight: 600;
       }
-      input[type="text"], input[type="number"] {
+      input[type="text"], input[type="number"], input[type="password"], select {
         width: 100%;
         padding: 8px 10px;
         font-size: 14px;
         box-sizing: border-box;
+      }
+      .hint {
+        font-size: 12px;
+        color: #807a71;
+        margin: 6px 0 0;
       }
       button {
         margin-top: 16px;
@@ -42,6 +47,18 @@
     <h1>Minerva Popup Dictionary</h1>
     <label for="deckName">Anki deck name</label>
     <input type="text" id="deckName" placeholder="Minerva Extension">
+    <label for="cardType">Card type</label>
+    <select id="cardType">
+      <option value="page">Page phrase</option>
+      <option value="deepseek">DeepSeek AI phrase</option>
+    </select>
+    <p class="hint">"DeepSeek AI phrase" generates a study passage from the word's definition. If generation fails, the page phrase is used instead.</p>
+    <label for="deepseekApiKey">DeepSeek API key</label>
+    <input type="password" id="deepseekApiKey" placeholder="sk-..." autocomplete="off">
+    <p class="hint">Stored only in this browser and used by the extension's background page. Required for AI phrases.</p>
+    <label for="deepseekDailyTokenLimit">Daily DeepSeek token limit</label>
+    <input type="number" id="deepseekDailyTokenLimit" min="0" step="1000">
+    <p class="hint">Defaults to 30000 tokens, roughly 50 generated phrases per day. Set to 0 for no limit; when the limit is reached, normal page-phrase cards are added instead.</p>
     <label for="examplePhrasesBefore">Extra phrases before the selected phrase</label>
     <input type="number" id="examplePhrasesBefore" min="0" step="1">
     <label for="examplePhrasesAfter">Extra phrases after the selected phrase</label>

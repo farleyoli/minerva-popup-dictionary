@@ -45,9 +45,9 @@ function doubleClickEventHandler() {
         return;
     }
 
-    // New lookup from the page: capture the example phrase before the popup
-    // is added to the DOM.
-    currentExamplePhrase = getExamplePhrase(word);
+    // New lookup from the page: capture the raw example phrase before the
+    // popup is added to the DOM.
+    currentExamplePhrase = getExamplePhraseText();
     processDefinition(word, mouseX, mouseY, false, followingText);
 }
 
@@ -64,8 +64,10 @@ function doubleClickEventHandler() {
  * @param {string} frequency Word frequency rank.
  * @param {string} ipa Word IPA transcription.
  * @param {Function} callback Called with a boolean once the result arrives.
+ * @param {string} originalPhrase Page context for the answer side of AI cards.
+ * @param {string} cardType "page" or "deepseek".
  */
-function addCard(id, word, phrase, dfn="", pageTitle="", dateCreated="", frequency="", ipa="", callback) {
+function addCard(id, word, phrase, dfn="", pageTitle="", dateCreated="", frequency="", ipa="", callback, originalPhrase="", cardType="page") {
     chrome.runtime.sendMessage({
         msgType: "addCard",
         id: id,
@@ -75,7 +77,9 @@ function addCard(id, word, phrase, dfn="", pageTitle="", dateCreated="", frequen
         pageTitle: pageTitle,
         dateCreated: dateCreated,
         frequency: frequency,
-        ipa: ipa
+        ipa: ipa,
+        originalPhrase: originalPhrase,
+        cardType: cardType
     });
     chrome.runtime.onMessage.addListener(function addCardResultHandler(request) {
         if (request.msgType != "addCard") return;

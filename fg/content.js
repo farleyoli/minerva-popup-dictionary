@@ -515,6 +515,20 @@ function getFullDefinitionText(dict, word) {
 }
 
 /**
+ * Converts the rendered definition HTML into plain text for the DeepSeek
+ * prompt. Senses are separated so the model can tell them apart.
+ * @param {string} dfnHtml Definition HTML produced by getFullDefinitionText.
+ * @return {string} Plain-text definition.
+ */
+function getPlainDefinitionText(dfnHtml) {
+    return String(dfnHtml)
+        .replace(/<\/?(li|ol|ul|p|div)>/g, " ")
+        .replace(/<[^>]*>/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+}
+
+/**
  * Adds an "Add to Anki" button to the popup header, but only if Anki is
  * reachable through Anki-connect.
  * @param {Object} dict Dictionary JSON file containing the word.
@@ -522,27 +536,67 @@ function getFullDefinitionText(dict, word) {
  */
 function addAnkiButton(dict, word) {
     if (!(word in dict)) return;
-    const phrase = getExamplePhrase(word);
+    const cardType = currentCardType;
     checkAnkiAvailability(function(available) {
         if (!available) return;
-        checkWordExists(word, function(exists) {
+        checkWordExists(word, cardType, function(exists) {
             if (exists) return;
             const header = document.getElementById("minerva-header");
             if (!header) return;
             const btn = document.createElement("button");
             btn.id = "minerva-anki-button";
-            btn.innerText = "Add to Anki";
+            btn.innerText = cardType === "deepseek" ? "Add to Anki (AI)" : "Add to Anki";
             btn.addEventListener("click", function() {
-                const dfn = getFullDefinitionText(dict, word);
-                const pageTitle = document.title.trim();
-                const dateCreated = getCardCreationDate();
-                Promise.all([getFrequencyForCard(word), getIpaForCard(word)]).then(([frequency, ipa]) => {
-                    addCard(word, word, phrase, dfn, pageTitle, dateCreated, frequency, ipa, function(success) {
-                        if (success) btn.remove();
-                    });
-                });
+                addCardFromPopup(dict, word, cardType, btn);
             });
             header.appendChild(btn);
+        });
+    });
+}
+
+/**
+ * Builds and sends the Anki card for a word. When the DeepSeek card type is
+ * selected, the example phrase is generated from the definition and the page
+ * context is kept for the answer side; any failure falls back to the page
+ * phrase.
+ * @param {Object} dict Dictionary JSON file containing the word.
+ * @param {string} word Word whose definition is to be exported.
+ * @param {string} cardType "page" or "deepseek".
+ * @param {Object} btn Popup button to update with progress and errors.
+ */
+function addCardFromPopup(dict, word, cardType, btn) {
+    const dfn = getFullDefinitionText(dict, word);
+    const pageTitle = document.title.trim();
+    const dateCreated = getCardCreationDate();
+    Promise.all([getFrequencyForCard(word), getIpaForCard(word)]).then(([frequency, ipa]) => {
+        const addPageCard = function() {
+            addCard(word, word, getExamplePhrase(word), dfn, pageTitle, dateCreated, frequency, ipa, function(success) {
+                if (success) btn.remove();
+            });
+        };
+        if (cardType !== "deepseek") {
+            addPageCard();
+            return;
+        }
+        btn.disabled = true;
+        btn.innerText = "Generating…";
+        generateExamplePhrase(word, getPlainDefinitionText(dfn), getExamplePhraseText(), function(success, passage, reason) {
+            const wrappedPhrase = success ? wrapExamplePhraseInParagraphs(passage, word) : "";
+            if (!wrappedPhrase.includes("{{c1::")) {
+                btn.disabled = false;
+                btn.innerText = reason === "limit"
+                    ? "Daily AI limit reached — adding page phrase"
+                    : "AI unavailable — adding page phrase";
+                addPageCard();
+                return;
+            }
+            const originalText = getExamplePhraseText();
+            const originalPhrase = originalText
+                ? wrapExamplePhraseInParagraphs(originalText, word, match => "<b>" + match + "</b>")
+                : "";
+            addCard(word, word, wrappedPhrase, dfn, pageTitle, dateCreated, frequency, ipa, function(success) {
+                if (success) btn.remove();
+            }, originalPhrase, "deepseek");
         });
     });
 }

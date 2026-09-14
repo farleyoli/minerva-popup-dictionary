@@ -6,10 +6,12 @@ const vm = require('node:vm');
 
 function load() {
     const ankiSrc = fs.readFileSync(path.join(__dirname, '..', 'bg', 'anki.js'), 'utf8');
+    const deepseekSrc = fs.readFileSync(path.join(__dirname, '..', 'bg', 'deepseek.js'), 'utf8');
     const listenersSrc = fs.readFileSync(path.join(__dirname, '..', 'bg', 'listeners.js'), 'utf8');
     const sandbox = {};
     vm.createContext(sandbox);
     vm.runInContext(ankiSrc, sandbox);
+    vm.runInContext(deepseekSrc, sandbox);
     sandbox.chrome = {
         runtime: { onMessage: { addListener: () => {} } },
         tabs: { sendMessage: () => {} }
@@ -61,6 +63,89 @@ test('addCard reports failure when adding the card throws', async () => {
         pageTitle: 'Title', dateCreated: '2026-03-07', frequency: '100', ipa: 'rʌn'
     }, { addCard: async () => { throw new Error('boom'); } });
     assert.deepStrictEqual(sent, [[7, { msgType: 'addCard', msg: { state: 'failure' } }]]);
+});
+
+test('addCard with the deepseek card type routes to addAiCard with the original phrase', async () => {
+    let captured;
+    const sent = await run({
+        msgType: 'addCard', id: 'id-1', word: 'run', phrase: 'p',
+        originalPhrase: 'orig', dfn: 'd', pageTitle: 'Title',
+        dateCreated: '2026-03-07', frequency: '100', ipa: 'rʌn',
+        cardType: 'deepseek'
+    }, {
+        addAiCard: async (...args) => { captured = args; return 321; },
+        addCard: async () => { throw new Error('wrong model'); }
+    });
+    assert.deepStrictEqual(captured, [
+        'id-1', 'run', 'p', 'orig', 'd', 'Title', '2026-03-07', '100', 'rʌn'
+    ]);
+    assert.deepStrictEqual(sent, [[7, { msgType: 'addCard', msg: { state: 'success', result: 321 } }]]);
+});
+
+test('addCard with the page card type routes to addCard', async () => {
+    let captured;
+    const sent = await run({
+        msgType: 'addCard', id: 'id-1', word: 'run', phrase: 'p', dfn: 'd',
+        pageTitle: 'Title', dateCreated: '2026-03-07', frequency: '100', ipa: 'rʌn'
+    }, {
+        addCard: async (...args) => { captured = args; return 123; },
+        addAiCard: async () => { throw new Error('wrong model'); }
+    });
+    assert.deepStrictEqual(captured, [
+        'id-1', 'run', 'p', 'd', 'Title', '2026-03-07', '100', 'rʌn'
+    ]);
+    assert.deepStrictEqual(sent, [[7, { msgType: 'addCard', msg: { state: 'success', result: 123 } }]]);
+});
+
+test('generateExamplePhrase reports the generated passage as success', async () => {
+    const sent = await run({
+        msgType: 'generateExamplePhrase', word: 'run', definition: 'd', originalPhrase: 'o'
+    }, { generateExamplePhrase: async () => 'A short passage.' });
+    assert.deepStrictEqual(sent, [[7, {
+        msgType: 'generateExamplePhrase',
+        msg: { state: 'success', result: 'A short passage.' }
+    }]]);
+});
+
+test('generateExamplePhrase reports failure when generation throws', async () => {
+    const sent = await run({
+        msgType: 'generateExamplePhrase', word: 'run', definition: 'd', originalPhrase: 'o'
+    }, { generateExamplePhrase: async () => { throw new Error('no key'); } });
+    assert.deepStrictEqual(sent, [[7, {
+        msgType: 'generateExamplePhrase',
+        msg: { state: 'failure' }
+    }]]);
+});
+
+test('generateExamplePhrase forwards the failure reason when present', async () => {
+    const sent = await run({
+        msgType: 'generateExamplePhrase', word: 'run', definition: 'd', originalPhrase: 'o'
+    }, {
+        generateExamplePhrase: async () => {
+            throw Object.assign(new Error('limit reached'), { reason: 'limit' });
+        }
+    });
+    assert.deepStrictEqual(sent, [[7, {
+        msgType: 'generateExamplePhrase',
+        msg: { state: 'failure', reason: 'limit' }
+    }]]);
+});
+
+test('checkWordExists checks the model matching the requested card type', async () => {
+    let captured;
+    await run({ msgType: 'checkWordExists', word: 'run', cardType: 'deepseek' }, {
+        wordExistsInDeck: async (word, model) => { captured = { word, model }; return false; }
+    });
+    assert.strictEqual(captured.word, 'run');
+    assert.strictEqual(captured.model.name, 'minerva-popup-dictionary-ai');
+});
+
+test('checkWordExists defaults to the page model', async () => {
+    let captured;
+    await run({ msgType: 'checkWordExists', word: 'run' }, {
+        wordExistsInDeck: async (word, model) => { captured = { word, model }; return false; }
+    });
+    assert.strictEqual(captured.model.name, 'minerva-popup-dictionary');
 });
 
 test('unknown message types resolve to failure without calling Anki', async () => {

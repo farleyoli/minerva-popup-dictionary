@@ -6,7 +6,7 @@ const vm = require('node:vm');
 
 function loadBackgroundAnki() {
     const src = fs.readFileSync(path.join(__dirname, '..', 'bg', 'anki.js'), 'utf8') +
-        '\nthis.minervaTestExports = { MINERVA_MODEL_FIELDS, MINERVA_CARD_TEMPLATE, isDesiredModel };';
+        '\nthis.minervaTestExports = { MINERVA_MODEL, MINERVA_MODEL_FIELDS, MINERVA_CARD_TEMPLATE, isDesiredModel };';
     const sandbox = {};
     vm.createContext(sandbox);
     vm.runInContext(src, sandbox);
@@ -50,7 +50,7 @@ test('Minerva model includes source metadata, IPA, and answer-side word', () => 
 });
 
 test('the previous Minerva model is recognized as needing migration', () => {
-    const {MINERVA_MODEL_FIELDS, MINERVA_CARD_TEMPLATE, isDesiredModel} = loadBackgroundAnki();
+    const {MINERVA_MODEL, MINERVA_MODEL_FIELDS, MINERVA_CARD_TEMPLATE, isDesiredModel} = loadBackgroundAnki();
     const oldFields = ['id', 'word', 'example-phrase', 'definition'];
     const oldTemplates = {
         'Minerva Card': {
@@ -60,8 +60,8 @@ test('the previous Minerva model is recognized as needing migration', () => {
     };
     const currentTemplates = {[MINERVA_CARD_TEMPLATE.Name]: MINERVA_CARD_TEMPLATE};
 
-    assert.strictEqual(isDesiredModel(oldFields, oldTemplates), false);
-    assert.strictEqual(isDesiredModel([...MINERVA_MODEL_FIELDS], currentTemplates), true);
+    assert.strictEqual(isDesiredModel(MINERVA_MODEL, oldFields, oldTemplates), false);
+    assert.strictEqual(isDesiredModel(MINERVA_MODEL, [...MINERVA_MODEL_FIELDS], currentTemplates), true);
 });
 
 test('card creation dates use a zero-padded local calendar date', () => {
