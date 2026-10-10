@@ -44,7 +44,7 @@ function checkWordExists(word, cardType, callback) {
     });
 }
 
-const GENERATE_PHRASE_TIMEOUT_MS = 35000;
+const GENERATE_PHRASE_TIMEOUT_MS = 65000;
 
 /**
  * Asks the background script to generate an example phrase with DeepSeek and

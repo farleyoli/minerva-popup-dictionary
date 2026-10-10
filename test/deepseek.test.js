@@ -107,24 +107,18 @@ test('generateExamplePhrase rejects when no key is configured', async () => {
     assert.strictEqual(called, false);
 });
 
-test('generateExamplePhrase posts the prompt and returns the passage and Japanese definition', async () => {
+test('generateExamplePhrase posts the prompt and returns the passage', async () => {
     const sandbox = setup();
     let request;
     sandbox.fetch = async (url, options) => {
         request = { url, options };
-        return fakeResponse({ body: completion(JSON.stringify({
-            passage: '  A calm passage.  ',
-            japaneseDefinition: '  穏やかな文章。  '
-        }), 321) });
+        return fakeResponse({ body: completion('  A calm passage.  ', 321) });
     };
 
-    const result = await sandbox.generateExamplePhrase(
+    const passage = await sandbox.generateExamplePhrase(
         'determined', 'resolute', 'She was determined to win.'
     );
-    assert.deepStrictEqual(JSON.parse(JSON.stringify(result)), {
-        passage: 'A calm passage.',
-        japaneseDefinition: '穏やかな文章。'
-    });
+    assert.strictEqual(passage, 'A calm passage.');
     assert.strictEqual(request.url, 'https://api.deepseek.com/chat/completions');
     assert.strictEqual(request.options.method, 'POST');
     assert.strictEqual(request.options.headers['Content-Type'], 'application/json');
@@ -133,13 +127,11 @@ test('generateExamplePhrase posts the prompt and returns the passage and Japanes
     const body = JSON.parse(request.options.body);
     assert.strictEqual(body.model, 'deepseek-chat');
     assert.strictEqual(body.stream, false);
-    assert.deepStrictEqual(body.response_format, { type: 'json_object' });
     assert.strictEqual(body.messages.length, 2);
     assert.match(body.messages[1].content, /determined/);
     assert.match(body.messages[1].content, /resolute/);
     assert.match(body.messages[1].content, /She was determined to win\./);
     assert.match(body.messages[1].content, /2 to 3 sentences/);
-    assert.match(body.messages[1].content, /japaneseDefinition/);
 });
 
 test('generateExamplePhrase omits the original context when it is empty', async () => {
@@ -147,50 +139,54 @@ test('generateExamplePhrase omits the original context when it is empty', async 
     let request;
     sandbox.fetch = async (url, options) => {
         request = { url, options };
-        return fakeResponse({ body: completion('{"passage": "A passage."}', 100) });
+        return fakeResponse({ body: completion('A passage.', 100) });
     };
     await sandbox.generateExamplePhrase('run', 'move fast', '');
     const body = JSON.parse(request.options.body);
     assert.doesNotMatch(body.messages[1].content, /Original context:/);
 });
 
-test('generateExamplePhrase treats non-JSON content as the passage', async () => {
+test('generateExamplePhrase strips wrapping quotes from the passage', async () => {
     const sandbox = setup();
     sandbox.fetch = async () => fakeResponse({
         body: completion('"A quoted passage."', 100)
     });
-    assert.deepStrictEqual(
-        JSON.parse(JSON.stringify(
-            await sandbox.generateExamplePhrase('run', 'move fast', 'I run.')
-        )),
-        { passage: 'A quoted passage.', japaneseDefinition: '' }
+    assert.strictEqual(
+        await sandbox.generateExamplePhrase('run', 'move fast', 'I run.'),
+        'A quoted passage.'
     );
 });
 
-test('generateExamplePhrase accepts JSON wrapped in a code fence', async () => {
+test('generateJapaneseDefinition posts the Japanese prompt and returns the definition', async () => {
     const sandbox = setup();
-    sandbox.fetch = async () => fakeResponse({
-        body: completion('```json\n{"passage": "A passage.", "japaneseDefinition": "意味。"}\n```', 100)
-    });
-    assert.deepStrictEqual(
-        JSON.parse(JSON.stringify(
-            await sandbox.generateExamplePhrase('run', 'move fast', 'I run.')
-        )),
-        { passage: 'A passage.', japaneseDefinition: '意味。' }
-    );
+    let request;
+    sandbox.fetch = async (url, options) => {
+        request = { url, options };
+        return fakeResponse({ body: completion('  走ること。  ', 50) });
+    };
+
+    const definition = await sandbox.generateJapaneseDefinition('run', 'move fast');
+    assert.strictEqual(definition, '走ること。');
+    assert.strictEqual(request.url, 'https://api.deepseek.com/chat/completions');
+    const body = JSON.parse(request.options.body);
+    assert.strictEqual(body.model, 'deepseek-chat');
+    assert.strictEqual(body.stream, false);
+    assert.strictEqual(body.messages.length, 2);
+    assert.match(body.messages[0].content, /Japanese/);
+    assert.match(body.messages[1].content, /run/);
+    assert.match(body.messages[1].content, /move fast/);
+    assert.doesNotMatch(body.messages[1].content, /2 to 3 sentences/);
 });
 
-test('generateExamplePhrase treats a missing or non-string Japanese definition as empty', async () => {
-    const sandbox = setup();
-    sandbox.fetch = async () => fakeResponse({
-        body: completion('{"passage": "A passage.", "japaneseDefinition": 42}', 100)
+test('generateJapaneseDefinition records the tokens reported by the API', async () => {
+    let stored;
+    const sandbox = setup({
+        usage: { date: '2026-09-13', tokens: 100 },
+        onSet: (items) => { stored = items.deepseekUsage; }
     });
-    assert.deepStrictEqual(
-        JSON.parse(JSON.stringify(
-            await sandbox.generateExamplePhrase('run', 'move fast', 'I run.')
-        )),
-        { passage: 'A passage.', japaneseDefinition: '' }
-    );
+    sandbox.fetch = async () => fakeResponse({ body: completion('走ること。', 321) });
+    await sandbox.generateJapaneseDefinition('run', 'move fast');
+    assert.deepStrictEqual(JSON.parse(JSON.stringify(stored)), { date: '2026-09-13', tokens: 421 });
 });
 
 test('generateExamplePhrase rejects on a non-OK response', async () => {
@@ -263,10 +259,8 @@ test('generateExamplePhrase blocks once the daily limit is reached', async () =>
 test('a daily limit of zero disables the limit', async () => {
     const sandbox = setup({ limit: 0, usage: { date: '2026-09-13', tokens: 999999 } });
     sandbox.fetch = async () => fakeResponse({ body: completion('A passage.', 10) });
-    assert.deepStrictEqual(
-        JSON.parse(JSON.stringify(
-            await sandbox.generateExamplePhrase('run', 'move fast', 'I run.')
-        )),
-        { passage: 'A passage.', japaneseDefinition: '' }
+    assert.strictEqual(
+        await sandbox.generateExamplePhrase('run', 'move fast', 'I run.'),
+        'A passage.'
     );
 });

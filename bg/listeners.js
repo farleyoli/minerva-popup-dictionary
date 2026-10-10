@@ -59,15 +59,16 @@ async function messageHandler (request, sender) {
             ).catch( error => {
                 failureReason = error && error.reason ? error.reason : null;
             });
-            if (retObj && typeof retObj === "object") {
+            if (typeof retObj === "string" && retObj) {
+                const japaneseDefinition = await generateJapaneseDefinition(
+                    request.word, request.definition
+                ).catch( () => "" );
                 sendToTab(sender.tab.id, {
                     "msgType": request.msgType,
                     "msg": {
                         "state": "success",
-                        "result": retObj.passage,
-                        "japaneseDefinition": typeof retObj.japaneseDefinition === "string"
-                            ? retObj.japaneseDefinition
-                            : ""
+                        "result": retObj,
+                        "japaneseDefinition": japaneseDefinition
                     }
                 });
                 return;

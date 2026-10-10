@@ -102,10 +102,8 @@ test('generateExamplePhrase reports the generated passage and Japanese definitio
     const sent = await run({
         msgType: 'generateExamplePhrase', word: 'run', definition: 'd', originalPhrase: 'o'
     }, {
-        generateExamplePhrase: async () => ({
-            passage: 'A short passage.',
-            japaneseDefinition: '短い説明。'
-        })
+        generateExamplePhrase: async () => 'A short passage.',
+        generateJapaneseDefinition: async () => '短い説明。'
     });
     assert.deepStrictEqual(sent, [[7, {
         msgType: 'generateExamplePhrase',
@@ -117,15 +115,31 @@ test('generateExamplePhrase reports the generated passage and Japanese definitio
     }]]);
 });
 
-test('generateExamplePhrase reports an empty Japanese definition when none is generated', async () => {
+test('generateExamplePhrase reports an empty Japanese definition when its request fails', async () => {
     const sent = await run({
         msgType: 'generateExamplePhrase', word: 'run', definition: 'd', originalPhrase: 'o'
     }, {
-        generateExamplePhrase: async () => ({ passage: 'A short passage.' })
+        generateExamplePhrase: async () => 'A short passage.',
+        generateJapaneseDefinition: async () => { throw new Error('no japanese'); }
     });
     assert.deepStrictEqual(sent, [[7, {
         msgType: 'generateExamplePhrase',
         msg: { state: 'success', result: 'A short passage.', japaneseDefinition: '' }
+    }]]);
+});
+
+test('generateExamplePhrase does not request a Japanese definition when the phrase fails', async () => {
+    let japaneseCalled = false;
+    const sent = await run({
+        msgType: 'generateExamplePhrase', word: 'run', definition: 'd', originalPhrase: 'o'
+    }, {
+        generateExamplePhrase: async () => { throw new Error('no phrase'); },
+        generateJapaneseDefinition: async () => { japaneseCalled = true; return '短い説明。'; }
+    });
+    assert.strictEqual(japaneseCalled, false);
+    assert.deepStrictEqual(sent, [[7, {
+        msgType: 'generateExamplePhrase',
+        msg: { state: 'failure' }
     }]]);
 });
 
