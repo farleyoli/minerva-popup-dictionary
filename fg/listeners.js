@@ -66,8 +66,9 @@ function doubleClickEventHandler() {
  * @param {Function} callback Called with a boolean once the result arrives.
  * @param {string} originalPhrase Page context for the answer side of AI cards.
  * @param {string} cardType "page" or "deepseek".
+ * @param {string} japaneseDefinition Simple Japanese definition for AI cards.
  */
-function addCard(id, word, phrase, dfn="", pageTitle="", dateCreated="", frequency="", ipa="", callback, originalPhrase="", cardType="page") {
+function addCard(id, word, phrase, dfn="", pageTitle="", dateCreated="", frequency="", ipa="", callback, originalPhrase="", cardType="page", japaneseDefinition="") {
     chrome.runtime.sendMessage({
         msgType: "addCard",
         id: id,
@@ -79,7 +80,8 @@ function addCard(id, word, phrase, dfn="", pageTitle="", dateCreated="", frequen
         frequency: frequency,
         ipa: ipa,
         originalPhrase: originalPhrase,
-        cardType: cardType
+        cardType: cardType,
+        japaneseDefinition: japaneseDefinition
     });
     chrome.runtime.onMessage.addListener(function addCardResultHandler(request) {
         if (request.msgType != "addCard") return;

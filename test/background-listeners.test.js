@@ -65,19 +65,20 @@ test('addCard reports failure when adding the card throws', async () => {
     assert.deepStrictEqual(sent, [[7, { msgType: 'addCard', msg: { state: 'failure' } }]]);
 });
 
-test('addCard with the deepseek card type routes to addAiCard with the original phrase', async () => {
+test('addCard with the deepseek card type routes to addAiCard with the original phrase and Japanese definition', async () => {
     let captured;
     const sent = await run({
         msgType: 'addCard', id: 'id-1', word: 'run', phrase: 'p',
         originalPhrase: 'orig', dfn: 'd', pageTitle: 'Title',
         dateCreated: '2026-03-07', frequency: '100', ipa: 'rʌn',
-        cardType: 'deepseek'
+        cardType: 'deepseek', japaneseDefinition: '走る。'
     }, {
         addAiCard: async (...args) => { captured = args; return 321; },
         addCard: async () => { throw new Error('wrong model'); }
     });
     assert.deepStrictEqual(captured, [
-        'id-1', 'run', 'p', 'orig', 'd', 'Title', '2026-03-07', '100', 'rʌn'
+        'id-1', 'run', 'p', 'orig', 'd', 'Title', '2026-03-07', '100', 'rʌn',
+        '走る。'
     ]);
     assert.deepStrictEqual(sent, [[7, { msgType: 'addCard', msg: { state: 'success', result: 321 } }]]);
 });
@@ -97,13 +98,34 @@ test('addCard with the page card type routes to addCard', async () => {
     assert.deepStrictEqual(sent, [[7, { msgType: 'addCard', msg: { state: 'success', result: 123 } }]]);
 });
 
-test('generateExamplePhrase reports the generated passage as success', async () => {
+test('generateExamplePhrase reports the generated passage and Japanese definition as success', async () => {
     const sent = await run({
         msgType: 'generateExamplePhrase', word: 'run', definition: 'd', originalPhrase: 'o'
-    }, { generateExamplePhrase: async () => 'A short passage.' });
+    }, {
+        generateExamplePhrase: async () => ({
+            passage: 'A short passage.',
+            japaneseDefinition: '短い説明。'
+        })
+    });
     assert.deepStrictEqual(sent, [[7, {
         msgType: 'generateExamplePhrase',
-        msg: { state: 'success', result: 'A short passage.' }
+        msg: {
+            state: 'success',
+            result: 'A short passage.',
+            japaneseDefinition: '短い説明。'
+        }
+    }]]);
+});
+
+test('generateExamplePhrase reports an empty Japanese definition when none is generated', async () => {
+    const sent = await run({
+        msgType: 'generateExamplePhrase', word: 'run', definition: 'd', originalPhrase: 'o'
+    }, {
+        generateExamplePhrase: async () => ({ passage: 'A short passage.' })
+    });
+    assert.deepStrictEqual(sent, [[7, {
+        msgType: 'generateExamplePhrase',
+        msg: { state: 'success', result: 'A short passage.', japaneseDefinition: '' }
     }]]);
 });
 

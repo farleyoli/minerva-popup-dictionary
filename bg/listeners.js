@@ -26,7 +26,7 @@ function addCardForRequest(request) {
         return addAiCard(
             request.id, request.word, request.phrase, request.originalPhrase,
             request.dfn, request.pageTitle, request.dateCreated,
-            request.frequency, request.ipa
+            request.frequency, request.ipa, request.japaneseDefinition
         );
     }
     return addCard(
@@ -59,6 +59,19 @@ async function messageHandler (request, sender) {
             ).catch( error => {
                 failureReason = error && error.reason ? error.reason : null;
             });
+            if (retObj && typeof retObj === "object") {
+                sendToTab(sender.tab.id, {
+                    "msgType": request.msgType,
+                    "msg": {
+                        "state": "success",
+                        "result": retObj.passage,
+                        "japaneseDefinition": typeof retObj.japaneseDefinition === "string"
+                            ? retObj.japaneseDefinition
+                            : ""
+                    }
+                });
+                return;
+            }
             break;
         case "checkAnki":
             retObj = await getAnkiVersion().catch( error => {});

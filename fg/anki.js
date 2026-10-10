@@ -52,16 +52,20 @@ const GENERATE_PHRASE_TIMEOUT_MS = 35000;
  * @param {string} word Word being studied.
  * @param {string} definition Plain-text definition of the word.
  * @param {string} originalPhrase Raw page context where the word appeared.
- * @param {Function} callback Called with (success, passage, reason).
+ * @param {Function} callback Called with
+ * (success, passage, reason, japaneseDefinition).
  */
 function generateExamplePhrase(word, definition, originalPhrase, callback) {
     let settled = false;
-    function finish(success, passage, reason) {
+    function finish(success, passage, reason, japaneseDefinition) {
         if (settled) return;
         settled = true;
         chrome.runtime.onMessage.removeListener(handleResult);
         clearTimeout(timeoutId);
-        callback(success, passage, reason || "");
+        callback(
+            success, passage, reason || "",
+            typeof japaneseDefinition === "string" ? japaneseDefinition : ""
+        );
     }
     function handleResult(request) {
         if (request.msgType != "generateExamplePhrase") return;
@@ -69,7 +73,8 @@ function generateExamplePhrase(word, definition, originalPhrase, callback) {
         const success = !!request.msg && request.msg.state === "success" &&
             typeof result === "string" && result.trim().length > 0;
         const reason = request.msg && request.msg.reason ? request.msg.reason : "";
-        finish(success, success ? result : "", reason);
+        const japaneseDefinition = request.msg && request.msg.japaneseDefinition;
+        finish(success, success ? result : "", reason, japaneseDefinition);
     }
     const timeoutId = setTimeout(function() { finish(false, ""); }, GENERATE_PHRASE_TIMEOUT_MS);
     chrome.runtime.onMessage.addListener(handleResult);

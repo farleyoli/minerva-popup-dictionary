@@ -305,19 +305,26 @@ test('addCard builds the note from the given fields and adds it', async () => {
     });
 });
 
-test('the AI model stores the original phrase on the answer side', () => {
+test('the AI model stores the original phrase and Japanese definition on the answer side', () => {
     const { sandbox, AI_MODEL, AI_MODEL_FIELDS, AI_CARD_TEMPLATE } = setup();
     assert.deepStrictEqual([...AI_MODEL_FIELDS], [
         'id', 'word', 'example-phrase', 'original-phrase', 'definition',
-        'page-title', 'date-created', 'frequency', 'ipa'
+        'page-title', 'date-created', 'frequency', 'ipa', 'japanese-definition'
     ]);
     assert.match(AI_CARD_TEMPLATE.Front, /{{cloze:example-phrase}}/);
     assert.doesNotMatch(AI_CARD_TEMPLATE.Front, /{{original-phrase}}/);
+    assert.doesNotMatch(AI_CARD_TEMPLATE.Front, /{{japanese-definition}}/);
     assert.ok(
         AI_CARD_TEMPLATE.Back.indexOf('{{definition}}') <
+        AI_CARD_TEMPLATE.Back.indexOf('{{japanese-definition}}')
+    );
+    assert.ok(
+        AI_CARD_TEMPLATE.Back.indexOf('{{japanese-definition}}') <
         AI_CARD_TEMPLATE.Back.indexOf('{{original-phrase}}')
     );
+    assert.match(AI_CARD_TEMPLATE.Back, /{{#japanese-definition}}/);
     assert.match(AI_CARD_TEMPLATE.Back, /{{#original-phrase}}/);
+    assert.ok(AI_MODEL.css.includes('.japanese-definition'));
     assert.ok(AI_MODEL.css.includes('.original-phrase'));
 });
 
@@ -334,7 +341,7 @@ test('addAiCard builds the note from the given fields and adds it to the AI mode
 
     const result = await sandbox.addAiCard(
         'id-1', 'word', '<p>{{c1::word}} here.</p>', '<p>original context</p>',
-        'dfn', 'Title', '2026-03-07', '100', 'wɜːd'
+        'dfn', 'Title', '2026-03-07', '100', 'wɜːd', '簡単な意味。'
     );
     assert.strictEqual(result, 456);
     assert.strictEqual(captured.action, 'addNote');
@@ -348,7 +355,8 @@ test('addAiCard builds the note from the given fields and adds it to the AI mode
         'page-title': 'Title',
         'date-created': '2026-03-07',
         frequency: '100',
-        ipa: 'wɜːd'
+        ipa: 'wɜːd',
+        'japanese-definition': '簡単な意味。'
     });
 });
 
@@ -374,7 +382,8 @@ test('wordExistsInDeck probes the requested model', async () => {
         'page-title': '',
         'date-created': '',
         frequency: '',
-        ipa: ''
+        ipa: '',
+        'japanese-definition': ''
     });
 });
 
