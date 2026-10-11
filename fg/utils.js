@@ -370,27 +370,80 @@ function wrapExamplePhraseInParagraphs(text, word = "", markMatch = null) {
 }
 
 /**
+ * @param {string} token A word token from the passage.
+ * @param {string} target Lowercased target word.
+ * @return {boolean} Whether the token is the target or one of its recognized
+ * inflected forms.
+ */
+function isTargetWordForm(token, target) {
+    const normalized = String(token).toLowerCase();
+    return normalized === target ||
+        getEnglishBaseFormCandidates(token).some(
+            candidate => candidate.toLowerCase() === target
+        );
+}
+
+/**
  * Cloze-deletes every occurrence of a word in plain text. Inflected forms
  * recognized by the base-form heuristics count as occurrences too, so a
  * generated passage does not leave a use of the word un-clozed just because
- * it was conjugated or pluralized.
+ * it was conjugated or pluralized. Compound targets (for example, "noble
+ * gas") may have any of their words inflected.
  * @param {string} text Plain text to scan.
- * @param {string} word Target word.
+ * @param {string} word Target word or phrase.
  * @return {string} Text with every recognized occurrence cloze-deleted.
  */
 function clozeWordForms(text, word) {
     const target = String(word).trim().toLowerCase();
-    if (target.length === 0) {
+    const targetTokens = target.match(/[a-z]+(?:['’][a-z]+)?/g) || [];
+    if (targetTokens.length === 0) {
         return text;
     }
-    return String(text).replace(/[A-Za-z]+(?:['’][A-Za-z]+)?/g, match => {
-        const normalized = match.toLowerCase();
-        const isTargetForm = normalized === target ||
-            getEnglishBaseFormCandidates(match).some(
-                candidate => candidate.toLowerCase() === target
+    const textStr = String(text);
+    if (targetTokens.length === 1) {
+        const [targetWord] = targetTokens;
+        return textStr.replace(/[A-Za-z]+(?:['’][A-Za-z]+)?/g, match =>
+            isTargetWordForm(match, targetWord) ? "{{c1::" + match + "}}" : match
+        );
+    }
+    const tokens = [];
+    const tokenPattern = /[A-Za-z]+(?:['’][A-Za-z]+)?/g;
+    let tokenMatch;
+    while ((tokenMatch = tokenPattern.exec(textStr)) !== null) {
+        tokens.push({
+            raw: tokenMatch[0],
+            start: tokenMatch.index,
+            end: tokenMatch.index + tokenMatch[0].length
+        });
+    }
+    const width = targetTokens.length;
+    const parts = [];
+    let cursor = 0;
+    let index = 0;
+    while (index < tokens.length) {
+        const last = index + width - 1;
+        let matched = last < tokens.length;
+        for (let position = index; matched && position < last; position++) {
+            matched = /^[\s-]+$/.test(
+                textStr.slice(tokens[position].end, tokens[position + 1].start)
             );
-        return isTargetForm ? "{{c1::" + match + "}}" : match;
-    });
+        }
+        if (matched) {
+            matched = targetTokens.every((targetToken, offset) =>
+                isTargetWordForm(tokens[index + offset].raw, targetToken)
+            );
+        }
+        if (matched) {
+            parts.push(textStr.slice(cursor, tokens[index].start));
+            parts.push("{{c1::" + textStr.slice(tokens[index].start, tokens[last].end) + "}}");
+            cursor = tokens[last].end;
+            index = last + 1;
+        } else {
+            index++;
+        }
+    }
+    parts.push(textStr.slice(cursor));
+    return parts.join("");
 }
 
 /**

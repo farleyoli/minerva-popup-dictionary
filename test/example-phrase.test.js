@@ -183,6 +183,38 @@ test('generated passage clozes irregular verb forms of the word', () => {
     );
 });
 
+test('generated passage clozes every occurrence of a compound word', () => {
+    const raw = 'Helium is a noble gas. Argon is a noble gas too.';
+    assert.strictEqual(
+        wrapGeneratedPassageInParagraphs(raw, 'Noble Gas'),
+        '<p>Helium is a {{c1::noble gas}}.</p><p>Argon is a {{c1::noble gas}} too.</p>'
+    );
+});
+
+test('generated passage clozes an inflected compound word', () => {
+    const raw = 'Helium and argon are noble gases.';
+    assert.strictEqual(
+        wrapGeneratedPassageInParagraphs(raw, 'noble gas'),
+        '<p>Helium and argon are {{c1::noble gases}}.</p>'
+    );
+});
+
+test('generated passage clozes a hyphenated compound word', () => {
+    const raw = 'It is a state-of-the-art device.';
+    assert.strictEqual(
+        wrapGeneratedPassageInParagraphs(raw, 'state-of-the-art'),
+        '<p>It is a {{c1::state-of-the-art}} device.</p>'
+    );
+});
+
+test('generated passage does not cloze separate words of a compound apart', () => {
+    const raw = 'Gas is noble. A gas leak is dangerous.';
+    assert.strictEqual(
+        wrapGeneratedPassageInParagraphs(raw, 'noble gas'),
+        '<p>Gas is noble.</p><p>A gas leak is dangerous.</p>'
+    );
+});
+
 test('generated passage leaves unrelated words un-clozed', () => {
     const raw = 'She received the letter.';
     assert.strictEqual(
