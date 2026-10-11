@@ -15,6 +15,7 @@ const getEnglishPhrasalVerbCandidates = sandbox.getEnglishPhrasalVerbCandidates;
 const normalizePhraseCount = sandbox.normalizePhraseCount;
 const normalizeCardType = sandbox.normalizeCardType;
 const getExamplePhraseContext = sandbox.getExamplePhraseContext;
+const getExamplePhraseForCard = sandbox.getExamplePhraseForCard;
 const stripHtmlTags = sandbox.stripHtmlTags;
 
 test('clozes the word and wraps each sentence in its own <p>', () => {
@@ -74,6 +75,46 @@ test('leaves a single sentence as one paragraph', () => {
 test('does not wrap the word when word is empty', () => {
     const raw = 'He is determined to win.';
     assert.strictEqual(wrapExamplePhraseInParagraphs(raw, ''), '<p>He is determined to win.</p>');
+});
+
+test('card phrase clozes the card word when it appears in the page context', () => {
+    sandbox.currentExamplePhrase = 'He is determined to win.';
+    sandbox.currentExampleWord = 'determined';
+    sandbox.currentExampleFollowingText = ' to win.';
+    assert.strictEqual(
+        getExamplePhraseForCard('determined'),
+        '<p>He is {{c1::determined}} to win.</p>'
+    );
+});
+
+test('card phrase clozes the page surface form of a deconjugated headword', () => {
+    sandbox.currentExamplePhrase = 'She was taking her time.';
+    sandbox.currentExampleWord = 'taking';
+    sandbox.currentExampleFollowingText = ' her time.';
+    assert.strictEqual(
+        getExamplePhraseForCard('take'),
+        '<p>She was {{c1::taking}} her time.</p>'
+    );
+});
+
+test('card phrase clozes the page surface form of a suggested phrasal verb', () => {
+    sandbox.currentExamplePhrase = 'She was taking off her coat.';
+    sandbox.currentExampleWord = 'taking';
+    sandbox.currentExampleFollowingText = ' off her coat.';
+    assert.strictEqual(
+        getExamplePhraseForCard('take off'),
+        '<p>She was {{c1::taking}} off her coat.</p>'
+    );
+});
+
+test('card phrase does not cloze the page word for an unrelated headword', () => {
+    sandbox.currentExamplePhrase = 'She was taking her time.';
+    sandbox.currentExampleWord = 'taking';
+    sandbox.currentExampleFollowingText = ' her time.';
+    assert.strictEqual(
+        getExamplePhraseForCard('receive'),
+        '<p>She was taking her time.</p>'
+    );
 });
 
 test('escapes HTML-significant characters in the captured text', () => {

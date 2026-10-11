@@ -1,7 +1,11 @@
 // Example phrase captured from the page when the popup is first opened. It is
 // reused for any subword looked up inside the popup, so the phrase always
-// comes from the original page rather than the popup's own text.
+// comes from the original page rather than the popup's own text. The selected
+// page word and the text following it are kept so the original surface form
+// can still be cloze-deleted when the popup navigates to its base form.
 var currentExamplePhrase = null;
+var currentExampleWord = null;
+var currentExampleFollowingText = "";
 const DEFAULT_PHRASES_BEFORE = 2;
 const DEFAULT_PHRASES_AFTER = 1;
 const DEFAULT_CARD_TYPE = "page";
@@ -464,4 +468,37 @@ function getExamplePhrase(word = "", noPhrasesBefore = examplePhrasesBefore, noP
     return wrapExamplePhraseInParagraphs(
         getExamplePhraseText(noPhrasesBefore, noPhrasesAfter), word
     );
+}
+
+/**
+ * Checks whether a headword reached inside the popup is a base form of the
+ * page word selected when the popup opened. Used to decide whether the
+ * original surface form may stand in for the headword in a cloze deletion.
+ * @param {string} word Headword reached inside the popup.
+ * @return {boolean} True iff the word is a base form of the page word.
+ */
+function isBaseFormOfCurrentExampleWord(word) {
+    const normalized = String(word).trim().toLowerCase();
+    const pageWord = currentExampleWord || "";
+    const candidates = getEnglishBaseFormCandidates(pageWord)
+        .concat(getEnglishPhrasalVerbCandidates(pageWord, currentExampleFollowingText));
+    return candidates.some(candidate => candidate.toLowerCase() === normalized);
+}
+
+/**
+ * Gets the example phrase for an Anki card. The page context is cloze-deleted
+ * for the card's word. When that word does not appear in the captured context
+ * (for example, a base form reached from an inflected suggestion), the
+ * originally selected page word is cloze-deleted instead, so the card still
+ * contains a deletion.
+ * @param {string} word Headword whose card is being built.
+ * @return {string} HTML example phrase with a cloze deletion when possible.
+ */
+function getExamplePhraseForCard(word) {
+    const phrase = getExamplePhrase(word);
+    if (phrase.includes("{{c1::") || currentExamplePhrase == null ||
+        !currentExampleWord || !isBaseFormOfCurrentExampleWord(word)) {
+        return phrase;
+    }
+    return wrapExamplePhraseInParagraphs(currentExamplePhrase, currentExampleWord);
 }

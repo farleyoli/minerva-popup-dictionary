@@ -157,16 +157,16 @@ test('generateExamplePhrase strips wrapping quotes from the passage', async () =
     );
 });
 
-test('generateJapaneseDefinition posts the Japanese prompt and returns the definition', async () => {
+test('generateJapaneseDefinition posts the Japanese words prompt and returns the words', async () => {
     const sandbox = setup();
     let request;
     sandbox.fetch = async (url, options) => {
         request = { url, options };
-        return fakeResponse({ body: completion('  走ること。  ', 50) });
+        return fakeResponse({ body: completion('  走る、走ること。  ', 50) });
     };
 
-    const definition = await sandbox.generateJapaneseDefinition('run', 'move fast');
-    assert.strictEqual(definition, '走ること。');
+    const words = await sandbox.generateJapaneseDefinition('run', 'move fast');
+    assert.strictEqual(words, '走る、走ること。');
     assert.strictEqual(request.url, 'https://api.deepseek.com/chat/completions');
     const body = JSON.parse(request.options.body);
     assert.strictEqual(body.model, 'deepseek-chat');
@@ -175,6 +175,7 @@ test('generateJapaneseDefinition posts the Japanese prompt and returns the defin
     assert.match(body.messages[0].content, /Japanese/);
     assert.match(body.messages[1].content, /run/);
     assert.match(body.messages[1].content, /move fast/);
+    assert.match(body.messages[1].content, /1 to 3 Japanese words/);
     assert.doesNotMatch(body.messages[1].content, /2 to 3 sentences/);
 });
 

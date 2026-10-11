@@ -14,6 +14,8 @@ function clickEventHandler() {
         }
         openPopup.remove();
         currentExamplePhrase = null;
+        currentExampleWord = null;
+        currentExampleFollowingText = "";
     }
 }
 
@@ -48,6 +50,8 @@ function doubleClickEventHandler() {
     // New lookup from the page: capture the raw example phrase before the
     // popup is added to the DOM.
     currentExamplePhrase = getExamplePhraseText();
+    currentExampleWord = word;
+    currentExampleFollowingText = followingText;
     processDefinition(word, mouseX, mouseY, false, followingText);
 }
 

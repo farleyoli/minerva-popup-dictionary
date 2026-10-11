@@ -570,7 +570,7 @@ function addCardFromPopup(dict, word, cardType, btn) {
     const dateCreated = getCardCreationDate();
     Promise.all([getFrequencyForCard(word), getIpaForCard(word)]).then(([frequency, ipa]) => {
         const addPageCard = function() {
-            addCard(word, word, getExamplePhrase(word), dfn, pageTitle, dateCreated, frequency, ipa, function(success) {
+            addCard(word, word, getExamplePhraseForCard(word), dfn, pageTitle, dateCreated, frequency, ipa, function(success) {
                 if (success) btn.remove();
             });
         };

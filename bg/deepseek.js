@@ -18,8 +18,8 @@ const DEEPSEEK_SYSTEM_PROMPT =
     "word, its definition, and the context where it appeared, you write a " +
     "short GRE-style passage that uses the word in the same sense.";
 const DEEPSEEK_JAPANESE_SYSTEM_PROMPT =
-    "You write short, simple Japanese definitions of English words for " +
-    "learners of English. You reply with plain Japanese text only.";
+    "You give short Japanese translations of English words for learners of " +
+    "English. You reply with 1 to 3 Japanese words only.";
 
 /**
  * Builds an Error carrying a machine-readable reason so callers can tell a
@@ -150,7 +150,8 @@ function buildDeepSeekMessages(word, definitionText, originalPhrase) {
 }
 
 /**
- * Builds the chat messages requesting a short, simple Japanese definition.
+ * Builds the chat messages requesting 1 to 3 Japanese words that translate
+ * the English word in the sense of its definition.
  * @param {string} word Word being studied.
  * @param {string} definitionText Plain-text definition of the word.
  * @return {Array<Object>} Chat messages.
@@ -160,10 +161,12 @@ function buildJapaneseDefinitionMessages(word, definitionText) {
         "English word: " + word,
         "Definition: " + definitionText,
         "",
-        "Write a short, simple Japanese definition of this word matching the " +
-            "definition above, for a learner of English.",
-        "Use everyday Japanese only: no romaji, no English words, no quotes, " +
-            "no bullet points."
+        "Give 1 to 3 Japanese words that translate this English word in the " +
+            "sense of the definition above, for a learner of English.",
+        "Use everyday Japanese only: no romaji, no English words, no " +
+            "explanations, no example sentences.",
+        "Return only the words, separated by a Japanese comma (、) when there " +
+            "is more than one."
     ];
     return [
         {role: "system", content: DEEPSEEK_JAPANESE_SYSTEM_PROMPT},
@@ -246,11 +249,11 @@ async function generateExamplePhrase(word, definitionText, originalPhrase) {
 }
 
 /**
- * Calls the DeepSeek chat completions API and returns a short, simple
- * Japanese definition of the word matching the given English definition.
+ * Calls the DeepSeek chat completions API and returns 1 to 3 Japanese words
+ * translating the word in the sense of the given English definition.
  * @param {string} word Word being studied.
  * @param {string} definitionText Plain-text definition of the word.
- * @return {Promise<string>} Generated Japanese definition.
+ * @return {Promise<string>} Generated Japanese words.
  */
 async function generateJapaneseDefinition(word, definitionText) {
     return requestDeepSeekChat(

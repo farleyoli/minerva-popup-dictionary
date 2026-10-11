@@ -265,16 +265,18 @@ const AI_CARD_TEMPLATE = {
 };
 const AI_MODEL_EXTRA_CSS = `
 .japanese-definition {
-    margin-top: 10px;
+    margin-top: 14px;
     font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
-    font-size: 17px;
-    color: #6b675f;
-    line-height: 1.7;
+    font-size: 26px;
+    font-weight: 700;
+    color: #3f342c;
+    line-height: 1.5;
+    letter-spacing: 0.02em;
     padding-left: 15px;
 }
 
 .card.nightMode .japanese-definition {
-    color: #b8b2a9;
+    color: #eee8e1;
 }
 
 .original-phrase {
