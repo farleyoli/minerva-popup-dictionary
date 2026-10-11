@@ -370,6 +370,41 @@ function wrapExamplePhraseInParagraphs(text, word = "", markMatch = null) {
 }
 
 /**
+ * Cloze-deletes every occurrence of a word in plain text. Inflected forms
+ * recognized by the base-form heuristics count as occurrences too, so a
+ * generated passage does not leave a use of the word un-clozed just because
+ * it was conjugated or pluralized.
+ * @param {string} text Plain text to scan.
+ * @param {string} word Target word.
+ * @return {string} Text with every recognized occurrence cloze-deleted.
+ */
+function clozeWordForms(text, word) {
+    const target = String(word).trim().toLowerCase();
+    if (target.length === 0) {
+        return text;
+    }
+    return String(text).replace(/[A-Za-z]+(?:['’][A-Za-z]+)?/g, match => {
+        const normalized = match.toLowerCase();
+        const isTargetForm = normalized === target ||
+            getEnglishBaseFormCandidates(match).some(
+                candidate => candidate.toLowerCase() === target
+            );
+        return isTargetForm ? "{{c1::" + match + "}}" : match;
+    });
+}
+
+/**
+ * Wraps a DeepSeek-generated passage in HTML paragraphs, cloze-deleting every
+ * occurrence of the target word, including inflected forms.
+ * @param {string} text Raw passage returned by DeepSeek.
+ * @param {string} word Target word whose uses are to be deleted.
+ * @return {string} HTML passage with each sentence wrapped in a <p>.
+ */
+function wrapGeneratedPassageInParagraphs(text, word) {
+    return wrapExamplePhraseInParagraphs(clozeWordForms(text, word), "");
+}
+
+/**
  * Returns true when the punctuation at index ends a sentence in page text.
  * The check intentionally requires a following capital letter (or text end)
  * to avoid splitting most abbreviations and decimal numbers.

@@ -137,11 +137,13 @@ function buildDeepSeekMessages(word, definitionText, originalPhrase) {
         "",
         "Write a passage of 2 to 3 sentences for a vocabulary learner.",
         "Requirements:",
-        "- Use the target word exactly as written, without changing its form.",
+        "- Use the target word exactly as written every time it appears: never change its form, tense, or number (for example, do not write \"determined\" or \"determines\" when the target word is \"determine\").",
+        "- Use the target word at least once.",
         "- Use the same sense of the word as the definition.",
         "- Match the meaning of the original context, but make the passage easier to study than a newspaper article.",
         "- Use clear, textbook-style vocabulary and avoid other rare words.",
-        "- Write plain text only: no quotes, titles, bullet points, or cloze markup."
+        "- Write plain text only: no quotes, titles, bullet points, or cloze markup.",
+        "- Before answering, reread the passage and confirm that every occurrence of the target word is exactly as written."
     );
     return [
         {role: "system", content: DEEPSEEK_SYSTEM_PROMPT},

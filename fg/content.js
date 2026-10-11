@@ -581,7 +581,7 @@ function addCardFromPopup(dict, word, cardType, btn) {
         btn.disabled = true;
         btn.innerText = "Generating…";
         generateExamplePhrase(word, getPlainDefinitionText(dfn), getExamplePhraseText(), function(success, passage, reason, japaneseDefinition) {
-            const wrappedPhrase = success ? wrapExamplePhraseInParagraphs(passage, word) : "";
+            const wrappedPhrase = success ? wrapGeneratedPassageInParagraphs(passage, word) : "";
             if (!wrappedPhrase.includes("{{c1::")) {
                 btn.disabled = false;
                 btn.innerText = reason === "limit"

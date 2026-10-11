@@ -10,6 +10,7 @@ vm.createContext(sandbox);
 vm.runInContext(src, sandbox);
 
 const wrapExamplePhraseInParagraphs = sandbox.wrapExamplePhraseInParagraphs;
+const wrapGeneratedPassageInParagraphs = sandbox.wrapGeneratedPassageInParagraphs;
 const getEnglishBaseFormCandidates = sandbox.getEnglishBaseFormCandidates;
 const getEnglishPhrasalVerbCandidates = sandbox.getEnglishPhrasalVerbCandidates;
 const normalizePhraseCount = sandbox.normalizePhraseCount;
@@ -155,6 +156,46 @@ test('escapes the text before applying a custom marker', () => {
     assert.strictEqual(
         wrapExamplePhraseInParagraphs(raw, 'tag', match => '<b>' + match + '</b>'),
         '<p>Use the &lt;b&gt; <b>tag</b> to test.</p>'
+    );
+});
+
+test('generated passage clozes every exact occurrence of the word', () => {
+    const raw = 'They determine the outcome. We determine it too.';
+    assert.strictEqual(
+        wrapGeneratedPassageInParagraphs(raw, 'determine'),
+        '<p>They {{c1::determine}} the outcome.</p><p>We {{c1::determine}} it too.</p>'
+    );
+});
+
+test('generated passage clozes inflected forms of the word', () => {
+    const raw = 'She determined the cause. He determines the rules. They are determining the outcome.';
+    assert.strictEqual(
+        wrapGeneratedPassageInParagraphs(raw, 'determine'),
+        '<p>She {{c1::determined}} the cause.</p><p>He {{c1::determines}} the rules.</p><p>They are {{c1::determining}} the outcome.</p>'
+    );
+});
+
+test('generated passage clozes irregular verb forms of the word', () => {
+    const raw = 'She went home. He goes to work. They are gone.';
+    assert.strictEqual(
+        wrapGeneratedPassageInParagraphs(raw, 'go'),
+        '<p>She {{c1::went}} home.</p><p>He {{c1::goes}} to work.</p><p>They are {{c1::gone}}.</p>'
+    );
+});
+
+test('generated passage leaves unrelated words un-clozed', () => {
+    const raw = 'She received the letter.';
+    assert.strictEqual(
+        wrapGeneratedPassageInParagraphs(raw, 'take'),
+        '<p>She received the letter.</p>'
+    );
+});
+
+test('generated passage escapes HTML-significant characters', () => {
+    const raw = 'The sign says a < b and 5 > 3.';
+    assert.strictEqual(
+        wrapGeneratedPassageInParagraphs(raw, 'sign'),
+        '<p>The {{c1::sign}} says a &lt; b and 5 &gt; 3.</p>'
     );
 });
 

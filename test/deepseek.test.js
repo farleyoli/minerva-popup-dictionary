@@ -132,6 +132,7 @@ test('generateExamplePhrase posts the prompt and returns the passage', async () 
     assert.match(body.messages[1].content, /resolute/);
     assert.match(body.messages[1].content, /She was determined to win\./);
     assert.match(body.messages[1].content, /2 to 3 sentences/);
+    assert.match(body.messages[1].content, /every occurrence of the target word is exactly as written/);
 });
 
 test('generateExamplePhrase omits the original context when it is empty', async () => {
